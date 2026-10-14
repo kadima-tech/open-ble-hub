@@ -1,0 +1,21 @@
+# Ruff for Open BLE Hub. Python 3.11 is the documented minimum.
+# Pinned in CI to ruff 0.17.0 so the default rule set stays stable.
+target-version = "py311"
+line-length = 88
+
+[format]
+# Nested quotes inside f-strings are valid on 3.11 only when the inner
+# quotes differ from the outer ones. Reusing the outer quote is 3.12 syntax.
+quote-style = "preserve"
+
+[lint.per-file-ignores]
+# Device I/O fails in many ways. The listener and the Philips client catch
+# Exception around notify teardown and handshake steps so one bad packet or
+# a dropped adapter does not kill the process. Narrowing those handlers
+# would change behaviour.
+"ble_hub/listener.py" = ["BLE001"]
+"philips_ble/scale_link.py" = ["BLE001"]
+"philips_ble/session.py" = ["BLE001", "S110"]
+
+[lint.isort]
+known-first-party = ["ble_hub", "philips_ble"]

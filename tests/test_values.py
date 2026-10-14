@@ -46,9 +46,21 @@ class ClassifyTests(unittest.TestCase):
 
     def test_watch_takes_the_requested_scale_address(self):
         self.assertTrue(
-            matches_scale("0DL87801", [], "D6E45925-525A-8D69-AA6B-B056E0BEA6EA", "d6e45925-525a-8d69-aa6b-b056e0bea6ea")
+            matches_scale(
+                "0DL87801",
+                [],
+                "D6E45925-525A-8D69-AA6B-B056E0BEA6EA",
+                "d6e45925-525a-8d69-aa6b-b056e0bea6ea",
+            )
         )
-        self.assertFalse(matches_scale("0DL87801", [sig("78d2")], "OTHER", "D6E45925-525A-8D69-AA6B-B056E0BEA6EA"))
+        self.assertFalse(
+            matches_scale(
+                "0DL87801",
+                [sig("78d2")],
+                "OTHER",
+                "D6E45925-525A-8D69-AA6B-B056E0BEA6EA",
+            )
+        )
 
     def test_watch_takes_any_scale_when_no_address_is_requested(self):
         self.assertTrue(matches_scale("mystery", [sig("78d2")]))

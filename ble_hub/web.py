@@ -8,7 +8,7 @@ pairing countdown, confirmations and auto-submitting selects.
 from __future__ import annotations
 
 import secrets
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from html import escape
 from pathlib import Path
 from typing import Any
@@ -37,12 +37,14 @@ ICONS = {
     "check": '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     "search": '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
     "devices": '<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9 10.5c1.7-1.6 4.3-1.6 6 0"/><circle cx="12" cy="13.6" r=".9"/>',
-    "settings": ('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38'
-                 'a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73'
-                 'l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25'
-                 'a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74'
-                 'l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>'
-                 '<circle cx="12" cy="12" r="3"/>'),
+    "settings": (
+        '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38'
+        'a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73'
+        'l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25'
+        'a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74'
+        'l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>'
+        '<circle cx="12" cy="12" r="3"/>'
+    ),
     "hub": '<rect x="4" y="6" width="16" height="12" rx="2"/><path d="M8 18v2M16 18v2M8 10h3M8 13h5"/>',
     "scale": '<rect x="3" y="3" width="18" height="18" rx="5"/><rect x="8" y="6.5" width="8" height="4" rx="1.2"/>',
     "brush": '<rect x="9" y="2.5" width="6" height="19" rx="3"/><path d="M12 2.5v4"/>',
@@ -56,14 +58,17 @@ CATEGORY_ICON = {"Scales": "scale", "Oral care": "brush"}
 
 # -- small helpers ---------------------------------------------------------------
 
+
 def e(value: Any) -> str:
     return escape("" if value is None else str(value), quote=True)
 
 
 def icon(name: str, size: int = 20, label: str | None = None) -> str:
     aria = f'role="img" aria-label="{e(label)}"' if label else 'aria-hidden="true"'
-    return (f'<svg class="icon" width="{size}" height="{size}" viewBox="0 0 24 24" {aria} fill="none" stroke="currentColor" '
-            f'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{ICONS[name]}</svg>')
+    return (
+        f'<svg class="icon" width="{size}" height="{size}" viewBox="0 0 24 24" {aria} fill="none" stroke="currentColor" '
+        f'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{ICONS[name]}</svg>'
+    )
 
 
 def local(iso: str) -> datetime:
@@ -133,8 +138,19 @@ def badge(text: str, tone: str = "muted") -> str:
     return f'<span class="badge {tone}">{e(text)}</span>'
 
 
-def page(title: str, body: str, *, flash: str | None = None, poll: bool = False, width: str = "") -> web.Response:
-    notice = f'<div class="flash" role="status">{icon("check", 18)}<span>{e(flash)}</span></div>' if flash else ""
+def page(
+    title: str,
+    body: str,
+    *,
+    flash: str | None = None,
+    poll: bool = False,
+    width: str = "",
+) -> web.Response:
+    notice = (
+        f'<div class="flash" role="status">{icon("check", 18)}<span>{e(flash)}</span></div>'
+        if flash
+        else ""
+    )
     html = f"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -165,8 +181,14 @@ def status_of(request: web.Request) -> dict[str, Any]:
     return request.app[LISTENER_KEY].status()
 
 
-def topbar(title: str, back: str | None = None, sub: str = "", actions: str = "") -> str:
-    back_html = f'<a class="icon-btn" href="{e(back)}" aria-label="Back">{icon("back")}</a>' if back else ""
+def topbar(
+    title: str, back: str | None = None, sub: str = "", actions: str = ""
+) -> str:
+    back_html = (
+        f'<a class="icon-btn" href="{e(back)}" aria-label="Back">{icon("back")}</a>'
+        if back
+        else ""
+    )
     sub_html = f'<p class="sub">{sub}</p>' if sub else ""
     return f"""<header class="topbar">{back_html}<div class="topbar-title"><h1>{e(title)}</h1>{sub_html}</div>{actions}</header>"""
 
@@ -176,8 +198,13 @@ def current_profile(request: web.Request, profiles) -> Any:
     for profile in profiles:
         if str(profile["id"]) == wanted:
             return profile
-    latest = request.app[HUB_KEY].db.conn.execute(
-        "SELECT profile_id FROM measurements WHERE profile_id IS NOT NULL ORDER BY measured_at DESC LIMIT 1").fetchone()
+    latest = (
+        request.app[HUB_KEY]
+        .db.conn.execute(
+            "SELECT profile_id FROM measurements WHERE profile_id IS NOT NULL ORDER BY measured_at DESC LIMIT 1"
+        )
+        .fetchone()
+    )
     for profile in profiles:
         if latest and profile["id"] == latest["profile_id"]:
             return profile
@@ -186,11 +213,18 @@ def current_profile(request: web.Request, profiles) -> Any:
 
 def remember(response: web.Response, profile) -> web.Response:
     if profile is not None:
-        response.set_cookie(PROFILE_COOKIE, str(profile["id"]), max_age=365 * 86400, samesite="Lax", httponly=True)
+        response.set_cookie(
+            PROFILE_COOKIE,
+            str(profile["id"]),
+            max_age=365 * 86400,
+            samesite="Lax",
+            httponly=True,
+        )
     return response
 
 
 # -- dashboard -------------------------------------------------------------------
+
 
 def profile_switcher(current, profiles) -> str:
     items = "".join(
@@ -214,12 +248,20 @@ def who_card(hub: Hub, profiles, refs, next_url: str) -> str:
     buttons = []
     for p in profiles:
         ref = refs.get(p["id"])
-        hint = f"usually {ref:.1f} kg ({signed(row['weight_kg'] - ref)})" if ref else "no weighs yet"
+        hint = (
+            f"usually {ref:.1f} kg ({signed(row['weight_kg'] - ref)})"
+            if ref
+            else "no weighs yet"
+        )
         buttons.append(
             f'<button name="profile_id" value="{p["id"]}" class="who-option">{avatar(p, "sm")}'
             f'<span><strong>{e(p["name"])}</strong><small>{e(hint)}</small></span></button>'
         )
-    more = (f'<a href="/history?view=unassigned" class="link-small">{len(pending) - 1} more waiting</a>' if len(pending) > 1 else "")
+    more = (
+        f'<a href="/history?view=unassigned" class="link-small">{len(pending) - 1} more waiting</a>'
+        if len(pending) > 1
+        else ""
+    )
     return f"""<section class="card notice" aria-labelledby="who">
 <div class="card-head"><h2 id="who">Who was this?</h2><span class="muted-small">{e(when(row["measured_at"]))}</span></div>
 <p class="who-weight"><strong>{row["weight_kg"]:.1f} kg</strong> could not be matched to one person. Nothing is sent until you choose.</p>
@@ -240,7 +282,11 @@ def google_row(hub: Hub, profile) -> str:
         text, tone = ("Needs attention: " + link["last_error"], "error")
         action = f'<a class="btn btn-secondary btn-sm" href="/profiles/{profile["id"]}/google?new=1&amp;next=/">Reconnect</a>'
     else:
-        text = f'Last sent {when(link["last_ok_at"])}' if link["last_ok_at"] else "Connected · nothing sent yet"
+        text = (
+            f'Last sent {when(link["last_ok_at"])}'
+            if link["last_ok_at"]
+            else "Connected · nothing sent yet"
+        )
         tone, action = "ok", ""
     return f"""<div class="row-item"><span class="icon-tile {tone}">{icon("cloud", 18)}</span>
 <div class="row-text"><strong>Google Health</strong><small class="{tone}-text">{e(text)}</small></div>{action}</div>"""
@@ -255,17 +301,29 @@ async def dashboard(request: web.Request) -> web.Response:
     status = status_of(request)
     range_key = request.query.get("range", "30")
     days = next((d for key, _, d in RANGES if key == range_key), 30)
-    end = datetime.now(timezone.utc)
+    end = datetime.now(UTC)
     start = end - timedelta(days=days)
-    rows = hub.db.profile_measurements(profile["id"], since=start.isoformat(timespec="seconds"))
+    rows = hub.db.profile_measurements(
+        profile["id"], since=start.isoformat(timespec="seconds")
+    )
     oldest_first = list(reversed(rows))
     latest = hub.db.profile_measurements(profile["id"], limit=1)
     latest = latest[0] if latest else None
     refs = hub.references()
 
-    weight_points = [(datetime.fromisoformat(r["measured_at"]), r["weight_kg"]) for r in oldest_first]
-    fat_points = [(datetime.fromisoformat(r["measured_at"]), r["fat_pct"]) for r in oldest_first if r["fat_pct"] is not None]
-    lean_points = [(datetime.fromisoformat(r["measured_at"]), r["lean_kg"]) for r in oldest_first if r["lean_kg"] is not None]
+    weight_points = [
+        (datetime.fromisoformat(r["measured_at"]), r["weight_kg"]) for r in oldest_first
+    ]
+    fat_points = [
+        (datetime.fromisoformat(r["measured_at"]), r["fat_pct"])
+        for r in oldest_first
+        if r["fat_pct"] is not None
+    ]
+    lean_points = [
+        (datetime.fromisoformat(r["measured_at"]), r["lean_kg"])
+        for r in oldest_first
+        if r["lean_kg"] is not None
+    ]
     latest_comp = next((r for r in rows if r["fat_pct"] is not None), None)
 
     if latest is None:
@@ -277,10 +335,18 @@ async def dashboard(request: web.Request) -> web.Response:
         if len(weight_points) >= 2:
             change = weight_points[-1][1] - weight_points[0][1]
             delta = f'<span class="delta">{signed(change)} kg in {days} days</span>'
-        chart = charts.line_chart(
-            weight_points, start=start, end=end, tone="weight",
-            label=e(f"Weight over {days} days, {len(weight_points)} weighs, latest {latest['weight_kg']:.1f} kg"),
-        ) or '<p class="chart-empty">Weigh a few more times to see a trend.</p>'
+        chart = (
+            charts.line_chart(
+                weight_points,
+                start=start,
+                end=end,
+                tone="weight",
+                label=e(
+                    f"Weight over {days} days, {len(weight_points)} weighs, latest {latest['weight_kg']:.1f} kg"
+                ),
+            )
+            or '<p class="chart-empty">Weigh a few more times to see a trend.</p>'
+        )
         tabs = "".join(
             f'<a href="/?range={key}" class="seg-item{" is-on" if key == range_key else ""}"'
             f'{ARIA_PAGE if key == range_key else ""}>{label}</a>'
@@ -314,13 +380,20 @@ async def dashboard(request: web.Request) -> web.Response:
         f"""<li class="row-item"><div class="row-text"><strong>{r["weight_kg"]:.1f} kg</strong><small>{e(when(r["measured_at"]))}{f' · {r["fat_pct"]:.1f} % fat' if r["fat_pct"] is not None else ""}</small></div>{google_badge(r)}</li>"""
         for r in recent
     )
-    recent_card = f"""<section class="card list-card" aria-labelledby="recent">
+    recent_card = (
+        f"""<section class="card list-card" aria-labelledby="recent">
 <div class="card-head"><h2 id="recent" class="eyebrow">Recent weighs</h2><a href="/history" class="link-small">All weighs</a></div>
-<ul class="rows">{recent_rows}</ul></section>""" if recent else ""
+<ul class="rows">{recent_rows}</ul></section>"""
+        if recent
+        else ""
+    )
 
     hub_devices = devices.hub_devices(status, hub.db)
     if hub_devices:
-        dev_text = f'{len(hub_devices)} device{"s" if len(hub_devices) != 1 else ""} · ' + ("listening" if status["state"] != "disabled" else "Bluetooth off")
+        dev_text = (
+            f'{len(hub_devices)} device{"s" if len(hub_devices) != 1 else ""} · '
+            + ("listening" if status["state"] != "disabled" else "Bluetooth off")
+        )
         dev_tone = "ok" if all(d["state"] == "online" for d in hub_devices) else "warn"
     else:
         dev_text, dev_tone = "No devices yet. Pair your scale.", "warn"
@@ -330,14 +403,25 @@ async def dashboard(request: web.Request) -> web.Response:
 <div class="row-text"><strong>Device hub</strong><small>{e(dev_text)}</small></div>{icon("next", 18)}</a>
 </section>"""
 
-    actions = (f'<div class="topbar-actions"><a class="icon-btn" href="/devices" aria-label="Device hub">{icon("devices")}</a>'
-               f'<a class="icon-btn" href="/settings" aria-label="Settings">{icon("settings")}</a></div>')
+    actions = (
+        f'<div class="topbar-actions"><a class="icon-btn" href="/devices" aria-label="Device hub">{icon("devices")}</a>'
+        f'<a class="icon-btn" href="/settings" aria-label="Settings">{icon("settings")}</a></div>'
+    )
     body = f"""<header class="topbar dash-top">{profile_switcher(profile, profiles)}{actions}</header>
 <div class="dash">
 <div class="dash-main">{who_card(hub, profiles, refs, "/")}{weight_card}<div class="pair">{comp_cards}</div></div>
 <div class="dash-side">{connections}{recent_card}</div>
 </div>"""
-    return remember(page(profile["name"], body, flash=request.query.get("flash"), poll=True, width="wide"), profile)
+    return remember(
+        page(
+            profile["name"],
+            body,
+            flash=request.query.get("flash"),
+            poll=True,
+            width="wide",
+        ),
+        profile,
+    )
 
 
 def google_badge(row) -> str:
@@ -347,11 +431,14 @@ def google_badge(row) -> str:
     if status == "pending":
         return badge("Queued", "warn")
     if status == "error":
-        return f'<span class="badge error" title="{e(row["google_error"])}">Failed</span>'
+        return (
+            f'<span class="badge error" title="{e(row["google_error"])}">Failed</span>'
+        )
     return badge("Not sent")
 
 
 # -- history -------------------------------------------------------------------------
+
 
 async def history(request: web.Request) -> web.Response:
     hub = hub_of(request)
@@ -369,17 +456,24 @@ async def history(request: web.Request) -> web.Response:
     next_url = with_query("/history", view=view)
     chips = "".join(
         f'<a href="/history?view={key}" class="chip{" is-on" if key == view else ""}"{ARIA_PAGE if key == view else ""}>{e(label)}</a>'
-        for key, label in (("person", profile["name"]), ("all", "Everyone"), ("unassigned", "Needs a person"))
+        for key, label in (
+            ("person", profile["name"]),
+            ("all", "Everyone"),
+            ("unassigned", "Needs a person"),
+        )
     )
     items = []
     for r in rows:
         options = ['<option value="">Nobody</option>'] + [
-            f'<option value="{p["id"]}"{" selected" if p["id"] == r["profile_id"] else ""}>{e(p["name"])}</option>' for p in profiles
+            f'<option value="{p["id"]}"{" selected" if p["id"] == r["profile_id"] else ""}>{e(p["name"])}</option>'
+            for p in profiles
         ]
         retry = ""
         if r["google_status"] == "error":
-            retry = (f'<form method="post" action="/measurements/{r["id"]}/retry"><input type="hidden" name="next" value="{e(next_url)}">'
-                     f'<button class="btn-link">Retry upload</button></form>')
+            retry = (
+                f'<form method="post" action="/measurements/{r["id"]}/retry"><input type="hidden" name="next" value="{e(next_url)}">'
+                f'<button class="btn-link">Retry upload</button></form>'
+            )
         detail = []
         if r["fat_pct"] is not None:
             detail.append(f'{r["fat_pct"]:.1f} % fat · {r["lean_kg"]:.1f} kg lean')
@@ -395,7 +489,11 @@ async def history(request: web.Request) -> web.Response:
 <form method="post" action="/measurements/{r["id"]}/delete" data-confirm="Delete this weigh from the hub? Anything already sent to Google stays there.">
 <input type="hidden" name="next" value="{e(next_url)}"><button class="btn-link danger">Delete</button></form>
 </div></li>""")
-    listing = f'<ul class="history">{"".join(items)}</ul>' if items else '<div class="card empty"><p>No weighs here.</p></div>'
+    listing = (
+        f'<ul class="history">{"".join(items)}</ul>'
+        if items
+        else '<div class="card empty"><p>No weighs here.</p></div>'
+    )
     body = f"""{topbar("Weighs", back="/")}
 <nav class="chips" aria-label="Show">{chips}</nav>
 {listing}"""
@@ -413,9 +511,17 @@ async def assign_measurement(request: web.Request) -> web.Response:
         raise web.HTTPNotFound()
     if profile_id is not None and hub.db.profile(profile_id) is None:
         raise web.HTTPBadRequest()
-    hub.assign(measurement_id, profile_id, by="manual", note=None if profile_id else "unassigned by hand")
+    hub.assign(
+        measurement_id,
+        profile_id,
+        by="manual",
+        note=None if profile_id else "unassigned by hand",
+    )
     message = "Saved."
-    if row["google_status"] == "done" and row["google_profile_id"] not in (None, profile_id):
+    if row["google_status"] == "done" and row["google_profile_id"] not in (
+        None,
+        profile_id,
+    ):
         message = "Saved. It was already sent to the previous person's Google Health; delete it there by hand."
     raise redirect(safe_next(form.get("next")), message)
 
@@ -423,7 +529,10 @@ async def assign_measurement(request: web.Request) -> web.Response:
 async def retry_measurement(request: web.Request) -> web.Response:
     hub = hub_of(request)
     form = await request.post()
-    hub.db.update_measurement(int(request.match_info["id"]), {"google_status": "pending", "google_error": None})
+    hub.db.update_measurement(
+        int(request.match_info["id"]),
+        {"google_status": "pending", "google_error": None},
+    )
     hub.kick_uploads()
     raise redirect(safe_next(form.get("next")), "Upload queued.")
 
@@ -431,20 +540,28 @@ async def retry_measurement(request: web.Request) -> web.Response:
 async def delete_measurement(request: web.Request) -> web.Response:
     form = await request.post()
     hub_of(request).db.delete_measurement(int(request.match_info["id"]))
-    raise redirect(safe_next(form.get("next")), "Weigh deleted. Anything already sent to Google stays there.")
+    raise redirect(
+        safe_next(form.get("next")),
+        "Weigh deleted. Anything already sent to Google stays there.",
+    )
 
 
 # -- onboarding -----------------------------------------------------------------
 
+
 def steps(current: int) -> str:
-    bars = "".join(f'<span class="{"is-done" if i <= current else ""}"></span>' for i in (1, 2, 3))
+    bars = "".join(
+        f'<span class="{"is-done" if i <= current else ""}"></span>' for i in (1, 2, 3)
+    )
     return f"""<div class="onboard-head"><span class="brand">{brand_mark()}Open BLE Hub</span><span class="muted-small">Step {current} of 3</span></div>
 <div class="progress" aria-hidden="true">{bars}</div>"""
 
 
 def brand_mark() -> str:
-    return ('<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" class="brand-mark"><circle cx="13" cy="13" r="12"/>'
-            '<path d="M8 15.5c1.6-3.6 8.4-3.6 10 0"/></svg>')
+    return (
+        '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" class="brand-mark"><circle cx="13" cy="13" r="12"/>'
+        '<path d="M8 15.5c1.6-3.6 8.4-3.6 10 0"/></svg>'
+    )
 
 
 async def welcome(request: web.Request) -> web.Response:
@@ -458,7 +575,13 @@ async def welcome(request: web.Request) -> web.Response:
         if not errors:
             profile_id = hub.db.create_profile(values)
             response = web.HTTPFound("/welcome/google")
-            response.set_cookie(PROFILE_COOKIE, str(profile_id), max_age=365 * 86400, samesite="Lax", httponly=True)
+            response.set_cookie(
+                PROFILE_COOKIE,
+                str(profile_id),
+                max_age=365 * 86400,
+                samesite="Lax",
+                httponly=True,
+            )
             raise response
     body = f"""{steps(1)}
 <h1 class="onboard-title">Let's set up your first profile</h1>
@@ -476,7 +599,9 @@ async def welcome_google(request: web.Request) -> web.Response:
     profile = current_profile(request, profiles)
     if hub.db.google_link(profile["id"]):
         action = f'<div class="card ok-card">{icon("check")}<p><strong>Google Health is connected for {e(profile["name"])}.</strong></p></div>'
-        primary = '<a class="btn btn-primary btn-block" href="/welcome/scale">Continue</a>'
+        primary = (
+            '<a class="btn btn-primary btn-block" href="/welcome/scale">Continue</a>'
+        )
     elif hub.google_client():
         action = ""
         primary = f'<a class="btn btn-primary btn-block" href="/profiles/{profile["id"]}/google?next=/welcome/scale">Connect Google Health</a>'
@@ -529,6 +654,7 @@ def pairing_panel(status: dict[str, Any], next_url: str) -> str:
 
 # -- devices -----------------------------------------------------------------------
 
+
 def device_row(device: dict[str, Any]) -> str:
     detail = device["model"]
     if device["last_weigh"]:
@@ -546,7 +672,11 @@ async def devices_page(request: web.Request) -> web.Response:
     query = request.query.get("q", "").strip()
     show = request.query.get("show", "all")
     group = request.query.get("group", "room")
-    listed = [d for d in all_devices if not query or query.lower() in f'{d["name"]} {d["model"]} {d["room"]}'.lower()]
+    listed = [
+        d
+        for d in all_devices
+        if not query or query.lower() in f'{d["name"]} {d["model"]} {d["room"]}'.lower()
+    ]
     if show == "attention":
         listed = [d for d in listed if d["state"] != "online"]
     attention = [d for d in listed if d["state"] != "online"]
@@ -561,7 +691,10 @@ async def devices_page(request: web.Request) -> web.Response:
     if len(all_devices) > 5:
         chips = "".join(
             f'<a class="chip{" is-on" if key == show else ""}" href="{e(with_query("/devices", q=query, show=key, group=group))}">{e(label)}</a>'
-            for key, label in (("all", f"All {len(all_devices)}"), ("attention", f"Needs attention {len(all_devices) - online}"))
+            for key, label in (
+                ("all", f"All {len(all_devices)}"),
+                ("attention", f"Needs attention {len(all_devices) - online}"),
+            )
         )
         tools = f"""<form class="search" role="search" method="get" action="/devices"><label class="sr-only" for="q">Search your devices</label>
 {icon("search", 18)}<input id="q" name="q" value="{e(query)}" placeholder="Search by name, model or room"><input type="hidden" name="group" value="{e(group)}"></form>
@@ -579,20 +712,31 @@ async def devices_page(request: web.Request) -> web.Response:
         groups.setdefault(device[key], []).append(device)
     for name, members in sorted(groups.items()):
         head, rest = members[:4], members[4:]
-        more = (f'<li><details class="more"><summary>Show {len(rest)} more</summary><ul class="rows">{"".join(device_row(d) for d in rest)}</ul></details></li>'
-                if rest else "")
+        more = (
+            f'<li><details class="more"><summary>Show {len(rest)} more</summary><ul class="rows">{"".join(device_row(d) for d in rest)}</ul></details></li>'
+            if rest
+            else ""
+        )
         sections.append(f"""<section aria-label="{e(name)}"><h2 class="group-head"><span>{e(name)}</span><span>{len(members)}</span></h2>
 <ul class="rows card list-card">{"".join(device_row(d) for d in head)}{more}</ul></section>""")
     if not all_devices:
-        sections.append("""<section class="card empty"><p><strong>No devices yet.</strong></p><p>Add your scale to start receiving weighs.</p></section>""")
+        sections.append(
+            """<section class="card empty"><p><strong>No devices yet.</strong></p><p>Add your scale to start receiving weighs.</p></section>"""
+        )
     elif not listed:
-        sections.append('<section class="card empty"><p>No devices match.</p></section>')
+        sections.append(
+            '<section class="card empty"><p>No devices match.</p></section>'
+        )
 
     group_toggle = ""
     if len(all_devices) > 1:
         other = "type" if group == "room" else "room"
         group_toggle = f'<p class="group-toggle">Grouped by {e(group)} · <a href="{e(with_query("/devices", q=query, show=show, group=other))}">group by {other}</a></p>'
-    summary = f'{len(all_devices)} device{"s" if len(all_devices) != 1 else ""} · {online} online' if all_devices else "Nothing paired yet"
+    summary = (
+        f'{len(all_devices)} device{"s" if len(all_devices) != 1 else ""} · {online} online'
+        if all_devices
+        else "Nothing paired yet"
+    )
     body = f"""{topbar("Device hub", back="/", sub=e(summary))}
 {hub_card}{tools}{group_toggle}
 <div class="stack">{"".join(sections)}</div>
@@ -601,7 +745,6 @@ async def devices_page(request: web.Request) -> web.Response:
 
 
 async def add_device(request: web.Request) -> web.Response:
-    hub = hub_of(request)
     status = status_of(request)
     query = request.query.get("q", "").strip()
     category = request.query.get("category", "")
@@ -610,14 +753,25 @@ async def add_device(request: web.Request) -> web.Response:
     nearby_rows = []
     for item in status.get("nearby", []):
         model = devices.model_info(item.get("model", ""))
-        title = f'Philips {model.name.lower()} {item.get("model")}' if model else (item.get("name") or "Unknown device")
-        if paired_address and item["address"] == paired_address and not item["pairing_mode"]:
+        title = (
+            f'Philips {model.name.lower()} {item.get("model")}'
+            if model
+            else (item.get("name") or "Unknown device")
+        )
+        if (
+            paired_address
+            and item["address"] == paired_address
+            and not item["pairing_mode"]
+        ):
             state, action = "Already paired", ""
         elif item["pairing_mode"]:
             state = "Ready to pair"
-            action = ("" if status["pairing"] else
-                      '<form method="post" action="/devices/pair"><input type="hidden" name="next" value="/devices/add">'
-                      '<button class="btn btn-primary btn-sm">Pair</button></form>')
+            action = (
+                ""
+                if status["pairing"]
+                else '<form method="post" action="/devices/pair"><input type="hidden" name="next" value="/devices/add">'
+                '<button class="btn btn-primary btn-sm">Pair</button></form>'
+            )
         else:
             state, action = "Not in pairing mode", ""
         signal = f' · {item["rssi"]} dBm' if item.get("rssi") is not None else ""
@@ -631,7 +785,11 @@ async def add_device(request: web.Request) -> web.Response:
 <p class="muted-small">Devices in pairing mode show up here first.</p>
 {f'<ul class="rows">{"".join(nearby_rows)}</ul>' if nearby_rows else '<p class="empty-inline">Nothing nearby yet. Put the device in pairing mode.</p>'}
 </section>"""
-    pairing = pairing_panel(status, "/devices/add") if status["pairing"] or status.get("last_pair_result") == "failed" else ""
+    pairing = (
+        pairing_panel(status, "/devices/add")
+        if status["pairing"] or status.get("last_pair_result") == "failed"
+        else ""
+    )
     if status.get("last_pair_result") == "paired" and not status["pairing"]:
         pairing = f'<div class="card ok-card">{icon("check")}<p><strong>Scale paired.</strong> Step on it barefoot to send a weigh.</p></div>'
 
@@ -641,11 +799,20 @@ async def add_device(request: web.Request) -> web.Response:
         for model in results:
             if model.support == "supported":
                 support = badge("Supported", "ok")
-                extra = (f'<p class="muted-small">{e(model.pairing)}</p>'
-                         '<form method="post" action="/devices/pair"><input type="hidden" name="next" value="/devices/add">'
-                         '<button class="btn btn-secondary btn-sm">Start pairing</button></form>') if model.pairing else ""
+                extra = (
+                    (
+                        f'<p class="muted-small">{e(model.pairing)}</p>'
+                        '<form method="post" action="/devices/pair"><input type="hidden" name="next" value="/devices/add">'
+                        '<button class="btn btn-secondary btn-sm">Start pairing</button></form>'
+                    )
+                    if model.pairing
+                    else ""
+                )
             else:
-                support, extra = badge("Planned"), '<p class="muted-small">Not supported yet.</p>'
+                support, extra = (
+                    badge("Planned"),
+                    '<p class="muted-small">Not supported yet.</p>',
+                )
             items.append(f"""<li class="catalogue-item"><div class="row-item"><span class="icon-tile">{icon(CATEGORY_ICON.get(model.category, "devices"), 18)}</span>
 <div class="row-text"><strong>{e(model.name)}</strong><small>{e(model.model)} · {e(model.measures)}</small></div>{support}</div>{extra}</li>""")
         heading = e(category or f'Results for "{query}"')
@@ -670,14 +837,26 @@ async def add_device(request: web.Request) -> web.Response:
 async def device_detail(request: web.Request) -> web.Response:
     hub = hub_of(request)
     status = status_of(request)
-    device = next((d for d in devices.hub_devices(status, hub.db) if d["id"] == request.match_info["id"]), None)
+    device = next(
+        (
+            d
+            for d in devices.hub_devices(status, hub.db)
+            if d["id"] == request.match_info["id"]
+        ),
+        None,
+    )
     if device is None:
         raise web.HTTPNotFound()
     model = devices.model_info(device["model"])
     tone = "ok" if device["state"] == "online" else "warn"
     facts = [
         ("Status", device["note"]),
-        ("Last weigh", when(device["last_weigh"].isoformat()) if device["last_weigh"] else "None yet"),
+        (
+            "Last weigh",
+            when(device["last_weigh"].isoformat())
+            if device["last_weigh"]
+            else "None yet",
+        ),
         ("Last contact", ago(status["last_seen"])),
         ("Measures", model.measures if model else "—"),
         ("Model", f'Philips {device["model"]}'),
@@ -733,14 +912,23 @@ async def pair_device(request: web.Request) -> web.Response:
 async def api_status(request: web.Request) -> web.Response:
     hub = hub_of(request)
     status = dict(status_of(request))
-    last_event = hub.db.conn.execute("SELECT MAX(id) AS id FROM events").fetchone()["id"]
-    last_weigh = hub.db.conn.execute("SELECT MAX(id) AS id FROM measurements").fetchone()["id"]
-    nearby = ",".join(f'{n["address"]}:{int(n["pairing_mode"])}' for n in status.get("nearby", []))
-    status["version"] = f'{last_event}-{last_weigh}-{status["paired"]}-{status["pairing"]}-{status["state"]}-{nearby}'
+    last_event = hub.db.conn.execute("SELECT MAX(id) AS id FROM events").fetchone()[
+        "id"
+    ]
+    last_weigh = hub.db.conn.execute(
+        "SELECT MAX(id) AS id FROM measurements"
+    ).fetchone()["id"]
+    nearby = ",".join(
+        f'{n["address"]}:{int(n["pairing_mode"])}' for n in status.get("nearby", [])
+    )
+    status["version"] = (
+        f'{last_event}-{last_weigh}-{status["paired"]}-{status["pairing"]}-{status["state"]}-{nearby}'
+    )
     return web.json_response(status)
 
 
 # -- people ----------------------------------------------------------------------
+
 
 def parse_profile(form) -> tuple[dict[str, Any], list[str]]:
     errors = []
@@ -776,13 +964,23 @@ def parse_profile(form) -> tuple[dict[str, Any], list[str]]:
     return values, errors
 
 
-def profile_fields(values: dict[str, Any], errors: list[str], action: str, submit: str, cancel: str | None = "/profiles",
-                   weight_label: str = "Weight today") -> str:
+def profile_fields(
+    values: dict[str, Any],
+    errors: list[str],
+    action: str,
+    submit: str,
+    cancel: str | None = "/profiles",
+    weight_label: str = "Weight today",
+) -> str:
     error_html = "".join(f"<li>{e(err)}</li>" for err in errors)
     sex = values.get("sex")
     height = values.get("height_cm")
     weight = values.get("start_weight_kg")
-    cancel_html = f'<a href="{e(cancel)}" class="btn btn-ghost btn-block">Cancel</a>' if cancel else ""
+    cancel_html = (
+        f'<a href="{e(cancel)}" class="btn btn-ghost btn-block">Cancel</a>'
+        if cancel
+        else ""
+    )
     return f"""<form method="post" action="{e(action)}" class="form">
 {f'<ul class="errors" role="alert">{error_html}</ul>' if errors else ""}
 <label class="field">Name<input name="name" required maxlength="40" autocomplete="given-name" value="{e(values.get("name"))}"></label>
@@ -811,7 +1009,11 @@ async def profiles_page(request: web.Request) -> web.Response:
     for p in profiles:
         ref = refs.get(p["id"])
         if p["google_linked"]:
-            google = badge("Google error", "error") if p["google_last_error"] else badge("Google connected", "ok")
+            google = (
+                badge("Google error", "error")
+                if p["google_last_error"]
+                else badge("Google connected", "ok")
+            )
         else:
             google = badge("No Google account")
         cards.append(f"""<li><a href="/profiles/{p["id"]}/edit" class="row-item row-link person">{avatar(p)}
@@ -854,8 +1056,11 @@ async def edit_profile(request: web.Request) -> web.Response:
         google = f"""<p class="muted-small">Not connected. Weighs stay on the hub.</p>
 <a class="btn btn-secondary" href="/profiles/{profile_id}/google?next=/profiles/{profile_id}/edit">Connect Google Health</a>"""
     else:
-        state = (f'<p class="error-text">{icon("alert", 16)} {e(link["last_error"])}</p>' if link["last_error"]
-                 else f'<p class="ok-text">{icon("check", 16)} Connected{" · last sent " + e(when(link["last_ok_at"])) if link["last_ok_at"] else ""}</p>')
+        state = (
+            f'<p class="error-text">{icon("alert", 16)} {e(link["last_error"])}</p>'
+            if link["last_error"]
+            else f'<p class="ok-text">{icon("check", 16)} Connected{" · last sent " + e(when(link["last_ok_at"])) if link["last_ok_at"] else ""}</p>'
+        )
         google = f"""{state}<div class="actions"><a class="btn btn-secondary" href="/profiles/{profile_id}/google?new=1&amp;next=/profiles/{profile_id}/edit">Reconnect</a>
 <form method="post" action="/profiles/{profile_id}/google/unlink" data-confirm="Disconnect this Google account? Remove the hub's access in the Google account too.">
 <button class="btn-link danger">Disconnect</button></form></div>"""
@@ -874,6 +1079,7 @@ async def delete_profile(request: web.Request) -> web.Response:
 
 # -- google linking --------------------------------------------------------------
 
+
 async def google_link_page(request: web.Request) -> web.Response:
     hub = hub_of(request)
     profile_id = int(request.match_info["id"])
@@ -883,8 +1089,14 @@ async def google_link_page(request: web.Request) -> web.Response:
     next_url = safe_next(request.query.get("next"), "/profiles")
     client = hub.google_client()
     if client is None:
-        raise redirect(with_query("/settings", next=with_query(f"/profiles/{profile_id}/google", next=next_url), back=next_url),
-                       "Add the hub's Google OAuth client first.")
+        raise redirect(
+            with_query(
+                "/settings",
+                next=with_query(f"/profiles/{profile_id}/google", next=next_url),
+                back=next_url,
+            ),
+            "Add the hub's Google OAuth client first.",
+        )
     pending = hub.db.oauth_pending_for(profile_id)
     if pending is None or request.query.get("new"):
         verifier, challenge = google_health.new_pkce()
@@ -921,21 +1133,45 @@ async def google_link_finish(request: web.Request) -> web.Response:
     client = hub.google_client()
     try:
         if client is None:
-            raise google_health.GoogleError("Add the hub's Google OAuth client in Settings first.")
+            raise google_health.GoogleError(
+                "Add the hub's Google OAuth client in Settings first."
+            )
         code, state = google_health.parse_redirect(str(form.get("redirect", "")))
-        pending = hub.db.take_oauth_pending(state) if state else hub.db.oauth_pending_for(profile_id)
+        pending = (
+            hub.db.take_oauth_pending(state)
+            if state
+            else hub.db.oauth_pending_for(profile_id)
+        )
         if pending is None or pending["profile_id"] != profile_id:
-            raise google_health.GoogleError("That sign-in belongs to a different or expired request. Start again.")
+            raise google_health.GoogleError(
+                "That sign-in belongs to a different or expired request. Start again."
+            )
         if state is None:
             hub.db.take_oauth_pending(pending["state"])
         tokens = await google_health.exchange_code(
-            await hub.http(), client_id=client[0], client_secret=client[1], code=code, verifier=pending["verifier"]
+            await hub.http(),
+            client_id=client[0],
+            client_secret=client[1],
+            code=code,
+            verifier=pending["verifier"],
         )
     except google_health.GoogleError as exc:
-        raise web.HTTPFound(with_query(f"/profiles/{profile_id}/google", new=1, error=str(exc), next=next_url))
-    hub.db.save_google_link(profile_id, tokens["refresh_token"], tokens.get("access_token"), tokens.get("expires_at"))
+        raise web.HTTPFound(
+            with_query(
+                f"/profiles/{profile_id}/google", new=1, error=str(exc), next=next_url
+            )
+        )
+    hub.db.save_google_link(
+        profile_id,
+        tokens["refresh_token"],
+        tokens.get("access_token"),
+        tokens.get("expires_at"),
+    )
     hub.db.log(f"Linked a Google account to {hub.db.profile(profile_id)['name']}")
-    for row in hub.db.conn.execute("SELECT id FROM measurements WHERE profile_id = ? AND google_status = 'none'", (profile_id,)).fetchall():
+    for row in hub.db.conn.execute(
+        "SELECT id FROM measurements WHERE profile_id = ? AND google_status = 'none'",
+        (profile_id,),
+    ).fetchall():
         hub.db.update_measurement(row["id"], {"google_status": "pending"})
     hub.kick_uploads()
     raise redirect(next_url, "Google Health connected. Earlier weighs are being sent.")
@@ -945,10 +1181,14 @@ async def google_unlink(request: web.Request) -> web.Response:
     hub = hub_of(request)
     profile_id = int(request.match_info["id"])
     hub.db.delete_google_link(profile_id)
-    raise redirect(f"/profiles/{profile_id}/edit", "Disconnected. Remove the hub's access in that Google account as well.")
+    raise redirect(
+        f"/profiles/{profile_id}/edit",
+        "Disconnected. Remove the hub's access in that Google account as well.",
+    )
 
 
 # -- settings -------------------------------------------------------------------------
+
 
 async def settings_page(request: web.Request) -> web.Response:
     hub = hub_of(request)
@@ -973,7 +1213,8 @@ async def settings_page(request: web.Request) -> web.Response:
         raise redirect(target or "/settings", "Settings saved.")
     has_secret = bool(hub.db.get_setting("google_client_secret"))
     events = "".join(
-        f'<li class="event {e(ev["level"])}"><time>{e(when(ev["at"]))}</time><span>{e(ev["message"])}</span></li>' for ev in hub.db.events(20)
+        f'<li class="event {e(ev["level"])}"><time>{e(when(ev["at"]))}</time><span>{e(ev["message"])}</span></li>'
+        for ev in hub.db.events(20)
     )
     body = f"""{topbar("Settings", back=back_url)}
 <form method="post" action="/settings" class="stack">

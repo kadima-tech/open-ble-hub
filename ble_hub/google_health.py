@@ -19,7 +19,7 @@ import base64
 import hashlib
 import secrets
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
@@ -39,7 +39,11 @@ class GoogleError(Exception):
 
 
 def pkce_challenge(verifier: str) -> str:
-    return base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
+    return (
+        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
+        .rstrip(b"=")
+        .decode()
+    )
 
 
 def new_pkce() -> tuple[str, str]:
@@ -67,7 +71,9 @@ def parse_redirect(text: str) -> tuple[str, str | None]:
     text = text.strip()
     if "code=" not in text:
         if not text:
-            raise GoogleError("Paste the address the browser ended on after signing in.")
+            raise GoogleError(
+                "Paste the address the browser ended on after signing in."
+            )
         return text, None
     query = parse_qs(urlparse(text).query if "://" in text else text.lstrip("?"))
     if "error" in query:
@@ -78,8 +84,12 @@ def parse_redirect(text: str) -> tuple[str, str | None]:
     return code, query.get("state", [None])[0]
 
 
-async def _token_request(session: aiohttp.ClientSession, data: dict[str, str]) -> dict[str, Any]:
-    async with session.post(TOKEN_URL, data=data, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+async def _token_request(
+    session: aiohttp.ClientSession, data: dict[str, str]
+) -> dict[str, Any]:
+    async with session.post(
+        TOKEN_URL, data=data, timeout=aiohttp.ClientTimeout(total=30)
+    ) as resp:
         body = await resp.json(content_type=None)
         if resp.status != 200:
             detail = body.get("error_description") or body.get("error") or resp.status
@@ -87,7 +97,14 @@ async def _token_request(session: aiohttp.ClientSession, data: dict[str, str]) -
         return body
 
 
-async def exchange_code(session: aiohttp.ClientSession, *, client_id: str, client_secret: str, code: str, verifier: str) -> dict[str, Any]:
+async def exchange_code(
+    session: aiohttp.ClientSession,
+    *,
+    client_id: str,
+    client_secret: str,
+    code: str,
+    verifier: str,
+) -> dict[str, Any]:
     body = await _token_request(
         session,
         {
@@ -100,12 +117,20 @@ async def exchange_code(session: aiohttp.ClientSession, *, client_id: str, clien
         },
     )
     if "refresh_token" not in body:
-        raise GoogleError("Google did not return a refresh token. Remove the app's access in your Google account and link again.")
+        raise GoogleError(
+            "Google did not return a refresh token. Remove the app's access in your Google account and link again."
+        )
     body["expires_at"] = time.time() + float(body.get("expires_in", 3600)) - 60
     return body
 
 
-async def refresh_access_token(session: aiohttp.ClientSession, *, client_id: str, client_secret: str, refresh_token: str) -> tuple[str, float]:
+async def refresh_access_token(
+    session: aiohttp.ClientSession,
+    *,
+    client_id: str,
+    client_secret: str,
+    refresh_token: str,
+) -> tuple[str, float]:
     body = await _token_request(
         session,
         {
@@ -119,11 +144,13 @@ async def refresh_access_token(session: aiohttp.ClientSession, *, client_id: str
 
 
 def sample_time(measured_at: datetime, utc_offset_s: int) -> dict[str, str]:
-    physical = measured_at.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    physical = measured_at.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     return {"physicalTime": physical, "utcOffset": f"{int(utc_offset_s)}s"}
 
 
-def weight_point(weight_kg: float, measured_at: datetime, utc_offset_s: int) -> dict[str, Any]:
+def weight_point(
+    weight_kg: float, measured_at: datetime, utc_offset_s: int
+) -> dict[str, Any]:
     return {
         "dataSource": {"recordingMethod": "ACTIVELY_MEASURED"},
         "weight": {
@@ -134,7 +161,9 @@ def weight_point(weight_kg: float, measured_at: datetime, utc_offset_s: int) -> 
     }
 
 
-def body_fat_point(fat_pct: float, measured_at: datetime, utc_offset_s: int) -> dict[str, Any]:
+def body_fat_point(
+    fat_pct: float, measured_at: datetime, utc_offset_s: int
+) -> dict[str, Any]:
     return {
         "dataSource": {"recordingMethod": "ACTIVELY_MEASURED"},
         "bodyFat": {
@@ -144,14 +173,29 @@ def body_fat_point(fat_pct: float, measured_at: datetime, utc_offset_s: int) -> 
     }
 
 
-async def create_data_point(session: aiohttp.ClientSession, access_token: str, data_type: str, body: dict[str, Any]) -> dict[str, Any]:
+async def create_data_point(
+    session: aiohttp.ClientSession,
+    access_token: str,
+    data_type: str,
+    body: dict[str, Any],
+) -> dict[str, Any]:
     url = f"{API_BASE}/{data_type}/dataPoints"
     headers = {"Authorization": f"Bearer {access_token}"}
-    async with session.post(url, json=body, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+    async with session.post(
+        url, json=body, headers=headers, timeout=aiohttp.ClientTimeout(total=30)
+    ) as resp:
         payload = await resp.json(content_type=None) if resp.content_length != 0 else {}
         if resp.status >= 300:
-            message = (payload or {}).get("error", {}).get("message") if isinstance(payload, dict) else None
-            raise GoogleError(f"{data_type} write failed ({resp.status}): {message or payload}")
+            message = (
+                (payload or {}).get("error", {}).get("message")
+                if isinstance(payload, dict)
+                else None
+            )
+            raise GoogleError(
+                f"{data_type} write failed ({resp.status}): {message or payload}"
+            )
         if isinstance(payload, dict) and payload.get("error"):
-            raise GoogleError(f"{data_type} write failed: {payload['error'].get('message')}")
+            raise GoogleError(
+                f"{data_type} write failed: {payload['error'].get('message')}"
+            )
         return payload or {}

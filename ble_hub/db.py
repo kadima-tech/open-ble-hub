@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -69,7 +69,7 @@ PROFILE_FIELDS = ("name", "sex", "birth_date", "height_cm", "start_weight_kg")
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 class Database:
@@ -85,7 +85,9 @@ class Database:
 
     # settings ---------------------------------------------------------
     def get_setting(self, key: str, default: str | None = None) -> str | None:
-        row = self.conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+        row = self.conn.execute(
+            "SELECT value FROM settings WHERE key = ?", (key,)
+        ).fetchone()
         return row["value"] if row and row["value"] is not None else default
 
     def set_setting(self, key: str, value: str | None) -> None:
@@ -97,12 +99,19 @@ class Database:
 
     # events -----------------------------------------------------------
     def log(self, message: str, level: str = "info") -> None:
-        self.conn.execute("INSERT INTO events (at, level, message) VALUES (?, ?, ?)", (now_iso(), level, message))
-        self.conn.execute("DELETE FROM events WHERE id NOT IN (SELECT id FROM events ORDER BY id DESC LIMIT 500)")
+        self.conn.execute(
+            "INSERT INTO events (at, level, message) VALUES (?, ?, ?)",
+            (now_iso(), level, message),
+        )
+        self.conn.execute(
+            "DELETE FROM events WHERE id NOT IN (SELECT id FROM events ORDER BY id DESC LIMIT 500)"
+        )
         self.conn.commit()
 
     def events(self, limit: int = 30) -> list[sqlite3.Row]:
-        return self.conn.execute("SELECT * FROM events ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
+        return self.conn.execute(
+            "SELECT * FROM events ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
 
     # profiles ---------------------------------------------------------
     def profiles(self) -> list[sqlite3.Row]:
@@ -112,7 +121,9 @@ class Database:
         ).fetchall()
 
     def profile(self, profile_id: int) -> sqlite3.Row | None:
-        return self.conn.execute("SELECT * FROM profiles WHERE id = ?", (profile_id,)).fetchone()
+        return self.conn.execute(
+            "SELECT * FROM profiles WHERE id = ?", (profile_id,)
+        ).fetchone()
 
     def create_profile(self, values: dict[str, Any]) -> int:
         cur = self.conn.execute(
@@ -142,9 +153,17 @@ class Database:
 
     # google -----------------------------------------------------------
     def google_link(self, profile_id: int) -> sqlite3.Row | None:
-        return self.conn.execute("SELECT * FROM google_links WHERE profile_id = ?", (profile_id,)).fetchone()
+        return self.conn.execute(
+            "SELECT * FROM google_links WHERE profile_id = ?", (profile_id,)
+        ).fetchone()
 
-    def save_google_link(self, profile_id: int, refresh_token: str, access_token: str | None, expires_at: float | None) -> None:
+    def save_google_link(
+        self,
+        profile_id: int,
+        refresh_token: str,
+        access_token: str | None,
+        expires_at: float | None,
+    ) -> None:
         self.conn.execute(
             "INSERT INTO google_links (profile_id, refresh_token, access_token, expires_at, linked_at) VALUES (?, ?, ?, ?, ?) "
             "ON CONFLICT(profile_id) DO UPDATE SET refresh_token = excluded.refresh_token, access_token = excluded.access_token, "
@@ -153,7 +172,9 @@ class Database:
         )
         self.conn.commit()
 
-    def update_google_token(self, profile_id: int, access_token: str, expires_at: float) -> None:
+    def update_google_token(
+        self, profile_id: int, access_token: str, expires_at: float
+    ) -> None:
         self.conn.execute(
             "UPDATE google_links SET access_token = ?, expires_at = ? WHERE profile_id = ?",
             (access_token, expires_at, profile_id),
@@ -162,17 +183,27 @@ class Database:
 
     def mark_google(self, profile_id: int, *, error: str | None) -> None:
         if error is None:
-            self.conn.execute("UPDATE google_links SET last_ok_at = ?, last_error = NULL WHERE profile_id = ?", (now_iso(), profile_id))
+            self.conn.execute(
+                "UPDATE google_links SET last_ok_at = ?, last_error = NULL WHERE profile_id = ?",
+                (now_iso(), profile_id),
+            )
         else:
-            self.conn.execute("UPDATE google_links SET last_error = ? WHERE profile_id = ?", (error, profile_id))
+            self.conn.execute(
+                "UPDATE google_links SET last_error = ? WHERE profile_id = ?",
+                (error, profile_id),
+            )
         self.conn.commit()
 
     def delete_google_link(self, profile_id: int) -> None:
-        self.conn.execute("DELETE FROM google_links WHERE profile_id = ?", (profile_id,))
+        self.conn.execute(
+            "DELETE FROM google_links WHERE profile_id = ?", (profile_id,)
+        )
         self.conn.commit()
 
     def add_oauth_pending(self, state: str, profile_id: int, verifier: str) -> None:
-        self.conn.execute("DELETE FROM oauth_pending WHERE profile_id = ?", (profile_id,))
+        self.conn.execute(
+            "DELETE FROM oauth_pending WHERE profile_id = ?", (profile_id,)
+        )
         self.conn.execute(
             "INSERT INTO oauth_pending (state, profile_id, verifier, created_at) VALUES (?, ?, ?, ?)",
             (state, profile_id, verifier, now_iso()),
@@ -180,14 +211,18 @@ class Database:
         self.conn.commit()
 
     def take_oauth_pending(self, state: str) -> sqlite3.Row | None:
-        row = self.conn.execute("SELECT * FROM oauth_pending WHERE state = ?", (state,)).fetchone()
+        row = self.conn.execute(
+            "SELECT * FROM oauth_pending WHERE state = ?", (state,)
+        ).fetchone()
         if row:
             self.conn.execute("DELETE FROM oauth_pending WHERE state = ?", (state,))
             self.conn.commit()
         return row
 
     def oauth_pending_for(self, profile_id: int) -> sqlite3.Row | None:
-        return self.conn.execute("SELECT * FROM oauth_pending WHERE profile_id = ?", (profile_id,)).fetchone()
+        return self.conn.execute(
+            "SELECT * FROM oauth_pending WHERE profile_id = ?", (profile_id,)
+        ).fetchone()
 
     # measurements -----------------------------------------------------
     def insert_measurement(self, values: dict[str, Any]) -> int | None:
@@ -204,7 +239,9 @@ class Database:
         return int(cur.lastrowid)
 
     def measurement(self, measurement_id: int) -> sqlite3.Row | None:
-        return self.conn.execute("SELECT * FROM measurements WHERE id = ?", (measurement_id,)).fetchone()
+        return self.conn.execute(
+            "SELECT * FROM measurements WHERE id = ?", (measurement_id,)
+        ).fetchone()
 
     def measurements(self, limit: int = 50) -> list[sqlite3.Row]:
         return self.conn.execute(
@@ -213,7 +250,9 @@ class Database:
             (limit,),
         ).fetchall()
 
-    def profile_measurements(self, profile_id: int, *, since: str | None = None, limit: int | None = None) -> list[sqlite3.Row]:
+    def profile_measurements(
+        self, profile_id: int, *, since: str | None = None, limit: int | None = None
+    ) -> list[sqlite3.Row]:
         """A person's weighs, newest first."""
         sql = "SELECT * FROM measurements WHERE profile_id = ?"
         params: list[Any] = [profile_id]
@@ -227,14 +266,21 @@ class Database:
         return self.conn.execute(sql, params).fetchall()
 
     def unassigned(self) -> list[sqlite3.Row]:
-        return self.conn.execute("SELECT * FROM measurements WHERE profile_id IS NULL ORDER BY measured_at DESC").fetchall()
+        return self.conn.execute(
+            "SELECT * FROM measurements WHERE profile_id IS NULL ORDER BY measured_at DESC"
+        ).fetchall()
 
     def latest_measurement(self) -> sqlite3.Row | None:
-        return self.conn.execute("SELECT * FROM measurements ORDER BY measured_at DESC LIMIT 1").fetchone()
+        return self.conn.execute(
+            "SELECT * FROM measurements ORDER BY measured_at DESC LIMIT 1"
+        ).fetchone()
 
     def update_measurement(self, measurement_id: int, values: dict[str, Any]) -> None:
         sets = ", ".join(f"{column} = ?" for column in values)
-        self.conn.execute(f"UPDATE measurements SET {sets} WHERE id = ?", [*values.values(), measurement_id])
+        self.conn.execute(
+            f"UPDATE measurements SET {sets} WHERE id = ?",
+            [*values.values(), measurement_id],
+        )
         self.conn.commit()
 
     def delete_measurement(self, measurement_id: int) -> None:

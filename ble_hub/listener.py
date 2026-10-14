@@ -18,12 +18,11 @@ from bleak import BleakClient, BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
 
+from ble_hub.bodycomp import age_on
+from ble_hub.hub import Hub
 from philips_ble.scale_link import ScaleStore, command_field, run_scale_handshake
 from philips_ble.scale_packets import parse_a3_append, parse_a3_weight
 from philips_ble.uuids import SCALE_SERVICES, sig
-
-from ble_hub.bodycomp import age_on
-from ble_hub.hub import Hub
 
 SERIAL_CHAR = sig("2a25")
 WEIGHT_CHAR = sig("8a24")
@@ -62,7 +61,11 @@ class ScaleListener:
     def paired_record(self) -> dict[str, Any] | None:
         serial = self.hub.db.get_setting("scale_serial")
         record = self.store.get(serial) if serial else None
-        return record if record and record.get("password") and record.get("broadcast_id") else None
+        return (
+            record
+            if record and record.get("password") and record.get("broadcast_id")
+            else None
+        )
 
     def pairing_active(self) -> bool:
         return time.time() < self.pairing_until
@@ -70,7 +73,9 @@ class ScaleListener:
     def start_pairing(self, seconds: int = 180) -> None:
         self.pairing_until = time.time() + seconds
         self.last_pair_result = None
-        self.hub.db.log(f"Pairing window open for {seconds} s. Hold the unit button on the scale for 3 s.")
+        self.hub.db.log(
+            f"Pairing window open for {seconds} s. Hold the unit button on the scale for 3 s."
+        )
 
     def forget(self) -> None:
         """Drop the stored pairing so the hub stops answering this scale until it is paired again."""
@@ -91,7 +96,9 @@ class ScaleListener:
             if entry["seen"] < cutoff:
                 continue
             item = dict(entry)
-            item["pairing_mode"] = entry["pairing_mode"] or (recent_request and entry["address"] == self.address)
+            item["pairing_mode"] = entry["pairing_mode"] or (
+                recent_request and entry["address"] == self.address
+            )
             found.append(item)
         return sorted(found, key=lambda item: item["seen"], reverse=True)
 
@@ -113,7 +120,10 @@ class ScaleListener:
         profiles = self.hub.db.profiles()
         if profiles:
             first = profiles[0]
-            age = min(100, max(18, age_on(date.fromisoformat(first["birth_date"]), date.today())))
+            age = min(
+                100,
+                max(18, age_on(date.fromisoformat(first["birth_date"]), date.today())),
+            )
             height = int(min(204, max(100, round(first["height_cm"]))))
             return age, height, first["sex"]
         return 35, 175, "male"
@@ -130,7 +140,7 @@ class ScaleListener:
                 self.last_error = None
             except asyncio.CancelledError:
                 raise
-            except (BleakError, asyncio.TimeoutError, OSError) as exc:
+            except (TimeoutError, BleakError, OSError) as exc:
                 self.last_error = f"{type(exc).__name__}: {exc}"
                 self.hub.db.log(f"Bluetooth: {self.last_error}", "warn")
                 await asyncio.sleep(3)
@@ -151,7 +161,9 @@ class ScaleListener:
                 return
             name = (adv.local_name if adv else None) or device.name or ""
             uuids = list(adv.service_uuids) if adv and adv.service_uuids else []
-            if (known and device.address.lower() == known) or looks_like_scale(name, uuids):
+            if (known and device.address.lower() == known) or looks_like_scale(
+                name, uuids
+            ):
                 # DL8780 advertises as 1DL87801 while it waits to be paired, 0DL87801 otherwise.
                 self.nearby[device.address] = {
                     "address": device.address,
@@ -163,7 +175,9 @@ class ScaleListener:
                 }
                 found.set_result(device)
 
-        scanner = BleakScanner(detection_callback=lambda d, a: loop.call_soon_threadsafe(on_detect, d, a))
+        scanner = BleakScanner(
+            detection_callback=lambda d, a: loop.call_soon_threadsafe(on_detect, d, a)
+        )
         await scanner.start()
         try:
             return await found
@@ -174,7 +188,12 @@ class ScaleListener:
         async with BleakClient(device, timeout=30) as client:
             if device.address != self.address:
                 self.hub.db.set_setting("scale_address", device.address)
-            serial = bytes(await client.read_gatt_char(SERIAL_CHAR)).split(b"\0", 1)[0].decode("ascii", "replace").strip()
+            serial = (
+                bytes(await client.read_gatt_char(SERIAL_CHAR))
+                .split(b"\0", 1)[0]
+                .decode("ascii", "replace")
+                .strip()
+            )
             if serial:
                 self.hub.db.set_setting("scale_serial", serial)
 
@@ -214,7 +233,12 @@ class ScaleListener:
                     return
                 parsed, raw_weight = pending_weight[0]
                 pending_weight[0] = None
-                self.hub.ingest(parsed, appended if "error" not in appended else None, raw_weight, raw)
+                self.hub.ingest(
+                    parsed,
+                    appended if "error" not in appended else None,
+                    raw_weight,
+                    raw,
+                )
 
             await client.start_notify(WEIGHT_CHAR, on_weight)
             await client.start_notify(APPEND_CHAR, on_append)
@@ -225,10 +249,16 @@ class ScaleListener:
             pairing = bool(kind and kind[0] == "password")
             if pairing and not self.pairing_active():
                 self.pairing_request_at = time.time()
-                self.hub.db.log("The scale is in pairing mode. Open the pairing window in the UI first.", "warn")
+                self.hub.db.log(
+                    "The scale is in pairing mode. Open the pairing window in the UI first.",
+                    "warn",
+                )
                 return
             if not pairing and self.paired_record() is None:
-                self.hub.db.log("The scale is paired to another app. Pair it with the hub from the UI.", "warn")
+                self.hub.db.log(
+                    "The scale is paired to another app. Pair it with the hub from the UI.",
+                    "warn",
+                )
                 return
 
             handshake_queue: asyncio.Queue[bytes] = asyncio.Queue()
@@ -271,11 +301,18 @@ class ScaleListener:
             if pairing:
                 self.pairing_until = 0.0
                 self.last_pair_result = "paired" if self.paired_record() else "failed"
-                self.hub.db.log("Scale paired with the hub." if self.last_pair_result == "paired" else "Pairing did not complete: " + "; ".join(messages[-2:]),
-                                "info" if self.last_pair_result == "paired" else "error")
+                self.hub.db.log(
+                    "Scale paired with the hub."
+                    if self.last_pair_result == "paired"
+                    else "Pairing did not complete: " + "; ".join(messages[-2:]),
+                    "info" if self.last_pair_result == "paired" else "error",
+                )
                 return
             if not any("recognised the user" in message for message in messages):
-                self.hub.db.log("The scale did not recognise the hub. Pair it again from the UI.", "warn")
+                self.hub.db.log(
+                    "The scale did not recognise the hub. Pair it again from the UI.",
+                    "warn",
+                )
 
             touched[0] = time.monotonic()
             while client.is_connected and time.monotonic() - touched[0] < IDLE_SECONDS:

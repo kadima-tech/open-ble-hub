@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import unittest
-from unittest import mock
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from zoneinfo import ZoneInfo
+from unittest import mock
 
 from philips_ble.scale_link import (
     ScaleStore,
@@ -16,10 +15,10 @@ from philips_ble.scale_link import (
     broadcast_frame,
     command_field,
     disconnect_frame,
+    goal_weight_bytes,
     height_centimetres_bytes,
     run_scale_handshake,
     user_info_fallback,
-    goal_weight_bytes,
     user_info_frame,
     user_slot,
     utc_frame,
@@ -29,7 +28,9 @@ from philips_ble.scale_link import (
 
 class FrameTests(unittest.TestCase):
     def test_broadcast_and_xor(self):
-        self.assertEqual(broadcast_frame(bytes.fromhex("01020304")), bytes.fromhex("21 01 02 03 04"))
+        self.assertEqual(
+            broadcast_frame(bytes.fromhex("01020304")), bytes.fromhex("21 01 02 03 04")
+        )
         # password 01 00 00 a0 XOR random 0a 00 00 01 -> 0b 00 00 a1
         self.assertEqual(
             xor_frame(bytes.fromhex("010000a0"), bytes.fromhex("0a000001")),
@@ -54,20 +55,32 @@ class FrameTests(unittest.TestCase):
         self.assertEqual(height_centimetres_bytes(100), bytes.fromhex("64 e0"))
         self.assertEqual(height_centimetres_bytes(204), bytes.fromhex("cc e0"))
         frame = user_info_frame(user_number=1, age=36, height_cm=183, sex="male")
-        self.assertEqual(frame, bytes.fromhex("51 df 01 01 24 b7 e0 00 00 00 00 00 ff 00 00"))
+        self.assertEqual(
+            frame, bytes.fromhex("51 df 01 01 24 b7 e0 00 00 00 00 00 ff 00 00")
+        )
         female = user_info_frame(user_number=1, age=36, height_cm=183, sex="female")
         self.assertEqual(female[3], 2)
 
     def test_utc_is_local_wall_clock_since_2010(self):
-        self.assertEqual(utc_frame(datetime(2010, 1, 1, 0, 0, 1)), bytes.fromhex("02 01 00 00 00"))
+        self.assertEqual(
+            utc_frame(datetime(2010, 1, 1, 0, 0, 1)), bytes.fromhex("02 01 00 00 00")
+        )
         # PHS Health on a Pixel at 19:50:13 CEST, from the HCI capture.
-        self.assertEqual(utc_frame(datetime(2026, 10, 13, 19, 50, 13)), bytes.fromhex("02 75 50 91 1f"))
+        self.assertEqual(
+            utc_frame(datetime(2026, 10, 13, 19, 50, 13)),
+            bytes.fromhex("02 75 50 91 1f"),
+        )
 
     def test_disconnect_and_command_classifier(self):
         self.assertEqual(disconnect_frame(), bytes((0x22,)))
         packet = bytes.fromhex("a1 01 00 00 a0") + bytes(15)
-        self.assertEqual(command_field(packet), ("random", bytes.fromhex("01 00 00 a0")))
-        self.assertEqual(command_field(bytes.fromhex("a0 aa bb cc dd")), ("password", bytes.fromhex("aa bb cc dd")))
+        self.assertEqual(
+            command_field(packet), ("random", bytes.fromhex("01 00 00 a0"))
+        )
+        self.assertEqual(
+            command_field(bytes.fromhex("a0 aa bb cc dd")),
+            ("password", bytes.fromhex("aa bb cc dd")),
+        )
 
     def test_already_paired_without_password_writes_nothing(self):
         writes: list[bytes] = []
@@ -90,7 +103,9 @@ class FrameTests(unittest.TestCase):
                     user_name="User",
                     password_override=None,
                     listen_seconds=30,
-                    log=lambda *_args, **kwargs: notes.append(kwargs.get("message", "")),
+                    log=lambda *_args, **kwargs: notes.append(
+                        kwargs.get("message", "")
+                    ),
                     sleep=_asleep,
                 )
             self.assertEqual(writes, [])
@@ -124,7 +139,10 @@ class FrameTests(unittest.TestCase):
                     sleep=_asleep,
                     release=False,
                 )
-            self.assertEqual(writes[0], xor_frame(bytes.fromhex("010000a0"), bytes.fromhex("010000a0")))
+            self.assertEqual(
+                writes[0],
+                xor_frame(bytes.fromhex("010000a0"), bytes.fromhex("010000a0")),
+            )
             self.assertEqual(writes[1][0], 0x02)
             self.assertEqual([item[0] for item in writes], [0x20, 0x02, 0x22])
 
@@ -166,7 +184,9 @@ class FrameTests(unittest.TestCase):
                     release=False,
                 )
             self.assertEqual(writes[1], bytes.fromhex("21 e5 8f ca 70"))
-            self.assertEqual([item[0] for item in writes], [0x20, 0x21, 0x02, 0x51, 0x22])
+            self.assertEqual(
+                [item[0] for item in writes], [0x20, 0x21, 0x02, 0x51, 0x22]
+            )
 
         asyncio.run(scenario())
 
@@ -201,7 +221,10 @@ class FrameTests(unittest.TestCase):
             assert saved is not None
             self.assertEqual(saved["password"], "11223344")
             self.assertEqual(writes[0][0], 0x21)
-            self.assertEqual(writes[1], xor_frame(bytes.fromhex("11223344"), bytes.fromhex("010000a0")))
+            self.assertEqual(
+                writes[1],
+                xor_frame(bytes.fromhex("11223344"), bytes.fromhex("010000a0")),
+            )
             self.assertEqual(writes[2], bind_user_frame(1, "User"))
             self.assertEqual(writes[3], user_info_fallback(1))
             self.assertEqual(writes[4][0], 0x02)
@@ -242,7 +265,9 @@ class FrameTests(unittest.TestCase):
             self.assertEqual(saved["age"], 36)
             self.assertEqual(saved["height_cm"], 183)
             self.assertEqual(saved["sex"], "male")
-            self.assertEqual(writes[3], bytes.fromhex("51 df 01 01 24 b7 e0 00 00 00 00 00 ff 00 00"))
+            self.assertEqual(
+                writes[3], bytes.fromhex("51 df 01 01 24 b7 e0 00 00 00 00 00 ff 00 00")
+            )
 
         asyncio.run(scenario())
 
@@ -254,8 +279,17 @@ class ProfileExtrasTests(unittest.TestCase):
         self.assertEqual(goal_weight_bytes(72.5), bytes.fromhex("d5 02 00 ff"))
 
     def test_activity_and_goal_fill_bytes_7_and_9_to_12(self):
-        frame = user_info_frame(user_number=1, age=36, height_cm=183, sex="male", activity_level=3, goal_kg=80)
-        self.assertEqual(frame, bytes.fromhex("51 df 01 01 24 b7 e0 03 00 20 03 00 ff 00 00"))
+        frame = user_info_frame(
+            user_number=1,
+            age=36,
+            height_cm=183,
+            sex="male",
+            activity_level=3,
+            goal_kg=80,
+        )
+        self.assertEqual(
+            frame, bytes.fromhex("51 df 01 01 24 b7 e0 03 00 20 03 00 ff 00 00")
+        )
 
 
 class UserListTests(unittest.TestCase):
@@ -267,7 +301,9 @@ class UserListTests(unittest.TestCase):
             events.append(f"write {payload[0]:02x}")
             if payload[0] == 0x20:
                 for slot in range(1, 9):
-                    holder["queue"].put_nowait(bytes((0x83, slot)) + b" " * 16 + bytes(2))
+                    holder["queue"].put_nowait(
+                        bytes((0x83, slot)) + b" " * 16 + bytes(2)
+                    )
 
         def log(_kind, **kwargs) -> None:
             if "user slots" in kwargs.get("message", ""):
@@ -327,7 +363,9 @@ class UserListTests(unittest.TestCase):
         self.assertEqual([item[0] for item in writes], [0x21, 0x20])
 
     def test_user_slot_trims_the_name(self):
-        self.assertEqual(user_slot(bytes((0x83, 2)) + b"Anna" + b" " * 12 + bytes(2)), (2, "Anna"))
+        self.assertEqual(
+            user_slot(bytes((0x83, 2)) + b"Anna" + b" " * 12 + bytes(2)), (2, "Anna")
+        )
         self.assertIsNone(user_slot(bytes.fromhex("a1 01 00 00 a0")))
 
 

@@ -47,7 +47,10 @@ CATEGORIES: tuple[str, ...] = ("Scales", "Oral care")
 
 
 def category_counts() -> list[tuple[str, int]]:
-    return [(category, sum(1 for model in CATALOGUE if model.category == category)) for category in CATEGORIES]
+    return [
+        (category, sum(1 for model in CATALOGUE if model.category == category))
+        for category in CATEGORIES
+    ]
 
 
 def search_catalogue(query: str = "", category: str = "") -> list[Model]:
@@ -56,7 +59,10 @@ def search_catalogue(query: str = "", category: str = "") -> list[Model]:
     for model in CATALOGUE:
         if category and model.category != category:
             continue
-        if query and query not in f"{model.model} {model.name} {model.category}".lower():
+        if (
+            query
+            and query not in f"{model.model} {model.name} {model.category}".lower()
+        ):
             continue
         results.append(model)
     return results

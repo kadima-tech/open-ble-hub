@@ -86,6 +86,7 @@ Not ready to write code? Open an issue with the device model, what it measures a
 | `tests/` | Unit tests, built from captured packets |
 | `DESIGN.md` | The web app's design language |
 | `CONTRIBUTING.md` | Development setup, tests and pull requests |
+| `SECURITY.md` | How to report a vulnerability |
 | `LICENSE` | MIT License |
 
 ## Low-level client
@@ -106,7 +107,7 @@ Options: `--address` picks a device when several are in range (on macOS this is 
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, tests and pull requests. Report security issues privately, as that file describes.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, tests and pull requests. Report security issues privately, as [SECURITY.md](SECURITY.md) describes.
 
 ## License
 

@@ -17,7 +17,14 @@ from philips_ble.scale_packets import (
 
 
 def _scaled(magnitude: int, exponent: int) -> bytes:
-    return bytes((magnitude & 0xFF, (magnitude >> 8) & 0xFF, (magnitude >> 16) & 0xFF, exponent & 0xFF))
+    return bytes(
+        (
+            magnitude & 0xFF,
+            (magnitude >> 8) & 0xFF,
+            (magnitude >> 16) & 0xFF,
+            exponent & 0xFF,
+        )
+    )
 
 
 class NumberTests(unittest.TestCase):
@@ -130,12 +137,18 @@ class PacketTests(unittest.TestCase):
         self.assertEqual(parsed["weight_kg"], "70.0")
 
     def test_8a22_follows_the_weight_that_asked_for_it(self):
-        weight = parse_scale_notification("8a21", b"\x00" + _scaled(7000, -2), family="01", previous=None)
+        weight = parse_scale_notification(
+            "8a21", b"\x00" + _scaled(7000, -2), family="01", previous=None
+        )
         weight["has_append_measurement"] = True
-        fat = parse_scale_notification("8a22", b"\x00\x00\x00\x00\x00", family="", previous=weight)
+        fat = parse_scale_notification(
+            "8a22", b"\x00\x00\x00\x00\x00", family="", previous=weight
+        )
         self.assertEqual(fat["packet"], "a2-fat")
 
-        both = parse_scale_notification("8a22", b"\x00\x00\x00\x00\x00", family="", previous=None)
+        both = parse_scale_notification(
+            "8a22", b"\x00\x00\x00\x00\x00", family="", previous=None
+        )
         self.assertIn("a2_fat", both)
         self.assertIn("a3_append", both)
 

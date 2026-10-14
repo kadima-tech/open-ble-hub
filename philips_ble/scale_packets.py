@@ -9,7 +9,7 @@ and derives pounds and stones from that. Body-composition fields use the
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from decimal import Decimal, ROUND_HALF_EVEN
+from decimal import ROUND_HALF_EVEN, Decimal
 from zoneinfo import ZoneInfo
 
 SHANGHAI = ZoneInfo("Asia/Shanghai")
@@ -142,7 +142,7 @@ class _Cursor:
                 f"need {width} bytes at offset {self.cursor}, packet length is {len(self.data)}",
                 self.parsed,
             )
-        chunk = self.data[self.cursor:end]
+        chunk = self.data[self.cursor : end]
         self.cursor = end
         return chunk
 
@@ -155,7 +155,9 @@ def _status(parsed: dict, status: int, *, accuracy: bool) -> None:
     parsed["impedance_status"] = IMPEDANCE_NAMES.get(impedance, str(impedance))
     parsed["has_append_measurement"] = bool(status & 0x10)
     if accuracy:
-        parsed["accuracy_status"] = "0.1LB division" if status & 0x20 else "0.2LB division"
+        parsed["accuracy_status"] = (
+            "0.1LB division" if status & 0x20 else "0.2LB division"
+        )
 
 
 def _parse_a2_weight(data: bytes) -> dict:
@@ -212,9 +214,7 @@ def _parse_a2_fat(data: bytes) -> dict:
         parsed["battery"] = byte & 0x07
         if byte & 0x08:
             nxt = cur.take(1)[0]
-            voltage = (
-                ((byte >> 7) & 1) * 4096 + ((byte >> 6) & 1) * 256 + nxt
-            ) / 100
+            voltage = (((byte >> 7) & 1) * 4096 + ((byte >> 6) & 1) * 256 + nxt) / 100
             parsed["voltage"] = _num(Decimal(str(voltage)))
     return _finish(parsed, data, cur.cursor)
 
@@ -291,7 +291,9 @@ def parse_a3_append(data: bytes) -> dict:
     return _guard(_parse_a3_append, data)
 
 
-def parse_scale_notification(short: str, data: bytes, *, family: str, previous: dict | None) -> dict:
+def parse_scale_notification(
+    short: str, data: bytes, *, family: str, previous: dict | None
+) -> dict:
     """Pick the parser the Lifesense dispatcher uses for this characteristic.
 
     family is the protocol digit from the advertised service ("01", "02", or "").

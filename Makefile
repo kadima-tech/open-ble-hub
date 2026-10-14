@@ -14,7 +14,7 @@ PY    := $(BIN)/python
 STAMP := $(VENV)/.installed
 
 .DEFAULT_GOAL := help
-.PHONY: help venv run ui test scan scale watch clean
+.PHONY: help venv run ui test lint scan scale watch clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-8s %s\n", $$1, $$2}'
@@ -36,6 +36,10 @@ ui: $(STAMP) ## Run Open BLE Hub without Bluetooth, for UI work
 
 test: $(STAMP) ## Run the unit tests
 	$(PY) -m unittest discover -s tests
+
+lint: ## Lint and format-check with ruff (python3 -m pip install ruff==0.17.0)
+	python3 -m ruff check .
+	python3 -m ruff format --check .
 
 scan: $(STAMP) ## Scan for Philips devices (philips_ble scan)
 	$(PY) -m philips_ble scan $(ARGS)

@@ -42,17 +42,24 @@ pytest is not installed or configured. `.pytest_cache/` is listed in `.gitignore
 
 ## Linters and CI
 
-No formatter, linter, or type checker is configured, and there is no pre-commit hook. Match the file you are editing.
+[Ruff](https://docs.astral.sh/ruff/) 0.17.0 lints and formats Python. The config is [ruff.toml](ruff.toml), aimed at Python 3.11. There is no type checker and no pre-commit hook.
 
-There is no GitHub Actions workflow or other CI. Run `make test` and say so in the pull request. When CI exists, it has to pass before merge.
+```bash
+python3 -m pip install ruff==0.17.0
+make lint
+```
+
+`make lint` runs `ruff check` and `ruff format --check`. Match that, and match the file you are editing. Quotes inside f-strings stay as they are: reusing the outer quote is Python 3.12 syntax, and this project is 3.11.
+
+GitHub Actions runs that lint, and `make test`, on every push and pull request. Tests run on Python 3.11, 3.12, 3.13 and 3.14, on Linux and macOS. CI has to pass before merge.
 
 ## Pull requests
 
 Branch from `main`. Keep the change focused.
 
-- Describe what changed, why, and how you tested it.
+- Describe what changed, why, and how you tested it. The pull request template is the checklist.
 - Add tests for new behaviour. `make test` passes.
-- Pass CI once this repository has it.
+- `make lint` passes, and so does CI.
 - A new device follows [Adding a device](README.md#adding-a-device): notes in `docs/`, a client with packet tests, then hub wiring in `ble_hub/listener.py`, `ble_hub/devices.py`, and `ble_hub/google_health.py` when a new measurement is written.
 - UI work follows [DESIGN.md](DESIGN.md). Pages stay server-rendered and usable with no internet; the font is vendored.
 
@@ -68,7 +75,7 @@ A new dependency needs a reason in the pull request: what the standard library c
 
 ## Security
 
-Report vulnerabilities privately to [jacobus@kadima-tech.com](mailto:jacobus@kadima-tech.com). Do not open a public GitHub issue, and do not put exploit details in a pull request. This repository has no `SECURITY.md`.
+Report vulnerabilities privately, as [SECURITY.md](SECURITY.md) describes: GitHub private vulnerability reporting, or [jacobus@kadima-tech.com](mailto:jacobus@kadima-tech.com). Do not open a public GitHub issue, and do not put exploit details in a pull request.
 
 Take extra care with health data and Google credentials:
 
