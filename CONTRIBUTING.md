@@ -40,6 +40,15 @@ New behaviour needs tests in that style. A protocol change should carry the byte
 
 pytest is not installed or configured. `.pytest_cache/` is listed in `.gitignore`, and there is no coverage tool.
 
+### Bleak upgrades
+
+`make test` installs `bleak` from `requirements.txt` (`bleak>=3.0.2,<4`) and runs `tests/test_bluetooth.py` on the Linux and macOS matrix. Those tests import bleak and drive `ble_hub/listener.py` and `philips_ble/session.py` with fakes spec'd to the installed bleak classes: discovery with `return_adv=True`, detection callbacks, `BleakClient` as a context manager, service and characteristic enumeration, read and write with `response=True`, start and stop notify (including the `8A82` stop-then-restart), `is_connected`, and `BleakError`, including the "Insufficient Encryption" hint. A signature change fails CI. The tests do not open a radio. The upper bound means the next major version arrives as a Dependabot pull request instead of installing on its own.
+
+CI does not replace a hardware smoke test. Before merging a bleak upgrade, pair a DL8780 and take a weigh on both stacks this project runs on:
+
+- Raspberry Pi with BlueZ: `make run`, start pairing in the UI, hold the scale's unit button for 3 seconds, then step on. The weigh should show on the dashboard.
+- Mac: the same pair and weigh, with Bluetooth allowed for the terminal under System Settings → Privacy & Security → Bluetooth.
+
 ## Linters and CI
 
 [Ruff](https://docs.astral.sh/ruff/) 0.17.0 lints and formats Python. The config is [ruff.toml](ruff.toml), aimed at Python 3.11. There is no type checker and no pre-commit hook.
