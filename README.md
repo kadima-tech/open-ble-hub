@@ -1,6 +1,15 @@
 # Open BLE Hub
 
-A self-hosted hub for Bluetooth health devices. It listens for your devices around the clock, works out which person in the household a reading belongs to, and sends it to that person's Google Health account. A small web app on your network handles onboarding, people, charts and pairing.
+A self-hosted hub for the Bluetooth devices around your home. It listens for them around the clock, works out which person a reading belongs to, and keeps that data on the hub. A small web app on your network handles onboarding, people, charts and pairing.
+
+## Mission
+
+Open-source the communication protocols for the Bluetooth devices around your home, both old and new, so you are not dependent on the manufacturer. Keep the readings on hardware you run instead of submitting them to the maker's cloud. Syncing to Google Health is opt-in, per person. Apple Health is a later goal and is not in the hub today.
+
+- **Local-first.** Profiles and readings live in the hub's database. A reading is uploaded only after that person connects a cloud account.
+- **Manufacturer-independent.** The hub talks to the device itself. It does not need the maker's app or account.
+- **Open protocols.** Handshakes, packet layouts and clients live in this repository, so the next device can be added in the open.
+- **Cloud sync is opt-in.** Each person can connect their own Google account from onboarding or their profile. Until they do, their readings stay on the hub. Connecting later also sends readings already stored here. Disconnecting stops further uploads.
 
 Open BLE Hub is an independent project. It is not affiliated with or endorsed by Philips or any other device maker. It is not a medical device.
 
@@ -20,7 +29,7 @@ Runs on **macOS** and **Linux**, including a Raspberry Pi 3 with DietPi or Raspb
 
 - **Weigh first, decide later.** The scale doesn't know who stepped on. The hub matches each weigh to the person whose recent weight is closest, and asks "Who was this?" on the dashboard when it can't tell.
 - **Body composition from published science.** Body fat uses the Jebb et al. (2000) equation for foot-to-foot scales (typical error ±4.8 % for men, ±3.3 % for women); lean mass is weight minus fat. The raw impedance is kept, so values can be recomputed.
-- **Google Health per person.** Each person links their own Google account; weight and body fat are written through the Google Health API, with retries.
+- **Google Health, when a person connects.** Weight and body fat are written to that person's Google Health account, with retries. Leave the account unconnected and the readings stay on the hub.
 - **Web app.** Onboarding, a dashboard with trends per person, a device hub for pairing, weigh history and settings. Server-rendered, works offline on the local network, light and dark mode.
 
 ## Quick start (Mac or Linux)
@@ -62,7 +71,7 @@ The web app has no login. Keep it on your home network.
 The first visit starts onboarding:
 
 1. **Your profile:** name, sex, birth date, height and today's weight. Add more people later from the profile switcher.
-2. **Google Health:** the hub needs one Google Cloud OAuth client of type *Desktop app* with the Google Health API enabled; Settings lists the steps. Then each person connects their own account: sign in, then paste back the `http://localhost/?…` address the browser lands on. While the OAuth app is in *Testing*, Google ends sign-ins after 7 days.
+2. **Google Health (optional):** skip this and readings stay on the hub. To sync, the hub needs one Google Cloud OAuth client of type *Desktop app* with the Google Health API enabled; Settings lists the steps. Then each person connects their own account: sign in, then paste back the `http://localhost/?…` address the browser lands on. While the OAuth app is in *Testing*, Google ends sign-ins after 7 days. Disconnecting a person stops further uploads; readings already sent to Google stay there.
 3. **Pair the scale:** press Start pairing, then hold the scale's unit button for 3 seconds. This replaces any phone app's pairing.
 
 ## Adding a device
