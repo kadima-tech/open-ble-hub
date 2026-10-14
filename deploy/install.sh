@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Install or update Philips BLE Hub on a Raspberry Pi (DietPi or Raspberry Pi OS).
+# Install or update Open BLE Hub on a Raspberry Pi (DietPi or Raspberry Pi OS).
 # Run from the repository root:  sudo ./deploy/install.sh
 set -euo pipefail
 
-APP_DIR=/opt/philips-ble-hub
-DATA_DIR=/var/lib/philips-ble-hub
-SERVICE_USER=philips-ble-hub
+APP_DIR=/opt/open-ble-hub
+DATA_DIR=/var/lib/open-ble-hub
+SERVICE_USER=open-ble-hub
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if [[ $EUID -ne 0 ]]; then
@@ -40,11 +40,11 @@ esac
 "$APP_DIR/.venv/bin/pip" install "${PIP_ARGS[@]}" -r "$APP_DIR/requirements.txt"
 
 echo "==> systemd unit"
-install -m 644 "$SRC_DIR/deploy/philips-ble-hub.service" /etc/systemd/system/philips-ble-hub.service
+install -m 644 "$SRC_DIR/deploy/open-ble-hub.service" /etc/systemd/system/open-ble-hub.service
 systemctl daemon-reload
 systemctl enable --now bluetooth >/dev/null 2>&1 || true
-systemctl enable philips-ble-hub >/dev/null
-systemctl restart philips-ble-hub
+systemctl enable open-ble-hub >/dev/null
+systemctl restart open-ble-hub
 
 echo "==> Checks"
 for cfg in /boot/firmware/config.txt /boot/config.txt; do
@@ -61,4 +61,4 @@ if [[ "$(timedatectl show -p Timezone --value 2>/dev/null || echo UTC)" == "UTC"
 fi
 
 echo
-echo "Philips BLE Hub is running. Open http://$(hostname -I 2>/dev/null | awk '{print $1}'):8080 in a browser on the same network."
+echo "Open BLE Hub is running. Open http://$(hostname -I 2>/dev/null | awk '{print $1}'):8080 in a browser on the same network."

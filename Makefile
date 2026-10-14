@@ -28,10 +28,10 @@ $(STAMP): requirements.txt
 
 venv: $(STAMP) ## Create .venv and install requirements.txt
 
-run: $(STAMP) ## Run Philips BLE Hub with Bluetooth (UI on PORT, data in DATA_DIR)
+run: $(STAMP) ## Run Open BLE Hub with Bluetooth (UI on PORT, data in DATA_DIR)
 	$(PY) -m ble_hub --data-dir $(DATA_DIR) --host $(HOST) --port $(PORT) $(ARGS)
 
-ui: $(STAMP) ## Run Philips BLE Hub without Bluetooth, for UI work
+ui: $(STAMP) ## Run Open BLE Hub without Bluetooth, for UI work
 	$(PY) -m ble_hub --data-dir $(DATA_DIR) --host $(HOST) --port $(PORT) --no-bluetooth $(ARGS)
 
 test: $(STAMP) ## Run the unit tests

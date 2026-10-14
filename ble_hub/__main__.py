@@ -1,6 +1,6 @@
-"""Run the Philips BLE Hub: Bluetooth listener, Google uploads and the configuration UI.
+"""Run the Open BLE Hub: Bluetooth listener, Google uploads and the configuration UI.
 
-    python -m ble_hub --data-dir /var/lib/philips-ble-hub --port 8080
+    python -m ble_hub --data-dir /var/lib/open-ble-hub --port 8080
 """
 
 from __future__ import annotations
@@ -23,15 +23,18 @@ class NoBluetooth:
 
     def status(self) -> dict:
         return {"state": "disabled", "address": None, "paired": False, "pairing": False, "pairing_seconds_left": 0,
-                "last_pair_result": None, "last_seen": None, "last_error": "Started with --no-bluetooth."}
+                "last_pair_result": None, "last_seen": None, "last_error": "Started with --no-bluetooth.", "nearby": []}
 
     def start_pairing(self, seconds: int = 180) -> None:
+        pass
+
+    def forget(self) -> None:
         pass
 
 
 async def serve(args: argparse.Namespace) -> None:
     data_dir = Path(args.data_dir)
-    db = Database(data_dir / "philips-ble-hub.db")
+    db = Database(data_dir / "open-ble-hub.db")
     hub = Hub(db)
     if args.no_bluetooth:
         listener = NoBluetooth()
@@ -42,7 +45,7 @@ async def serve(args: argparse.Namespace) -> None:
     runner = web.AppRunner(create_app(hub, listener), access_log=None)
     await runner.setup()
     await web.TCPSite(runner, args.host, args.port).start()
-    db.log(f"Philips BLE Hub started on port {args.port}.")
+    db.log(f"Open BLE Hub started on port {args.port}.")
     tasks = [asyncio.create_task(hub.upload_loop())]
     if not args.no_bluetooth:
         tasks.append(asyncio.create_task(listener.run()))
@@ -58,7 +61,7 @@ async def serve(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="philips-ble-hub", description="Philips DL8780 to Google Health bridge")
+    parser = argparse.ArgumentParser(prog="open-ble-hub", description="Bluetooth health devices to Google Health")
     parser.add_argument("--data-dir", default="data", help="Where the database and scale pairing live (default ./data)")
     parser.add_argument("--host", default="0.0.0.0", help="Address for the UI (default all interfaces)")
     parser.add_argument("--port", type=int, default=8080, help="Port for the UI (default 8080)")

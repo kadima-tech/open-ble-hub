@@ -1,4 +1,4 @@
-"""Philips BLE Hub: body composition, assignment, ingest, Google payloads and the UI."""
+"""Open BLE Hub: body composition, assignment, ingest, Google payloads and the UI."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from unittest import mock
 from aiohttp.test_utils import TestClient, TestServer
 
 from philips_ble.scale_packets import parse_a3_append, parse_a3_weight
-from ble_hub import assign, bodycomp, google_health
+from ble_hub import assign, bodycomp, charts, devices, google_health
 from ble_hub.__main__ import NoBluetooth
 from ble_hub.db import Database
 from ble_hub.hub import Hub, scale_time
@@ -23,6 +23,39 @@ WEIGHT_RAW = bytes.fromhex("1f 16 26 00 fe 89 50 91 1f 00 00 00 00 17 13 00 ff 0
 APPEND_RAW = bytes.fromhex("6d 89 50 91 1f 01 fc f0 32 f2 79 f1 26 f0 00 00 00 00 00 00")
 ME = dict(name="Me", sex="male", birth_date="1990-01-01", height_cm=183.0, start_weight_kg=97.0)
 GUEST = dict(name="Guest", sex="female", birth_date="1996-01-01", height_cm=170.0, start_weight_kg=105.0)
+
+
+class PairedListener:
+    """Listener stand-in that reports a paired scale and one nearby in pairing mode."""
+
+    def __init__(self):
+        self.pairing = False
+        self.forgotten = False
+
+    def status(self):
+        return {"state": "scanning", "address": "AA:BB", "paired": not self.forgotten, "pairing": self.pairing,
+                "pairing_seconds_left": 180 if self.pairing else 0, "last_pair_result": None, "last_seen": None, "last_error": None,
+                "nearby": [{"address": "CC:DD", "name": "1DL87801", "model": "DL8780", "rssi": -50, "seen": 0, "pairing_mode": True}]}
+
+    def start_pairing(self, seconds=180):
+        self.pairing = True
+
+    def forget(self):
+        self.forgotten = True
+
+
+class ChartAndCatalogueTests(unittest.TestCase):
+    def test_line_chart_needs_two_points(self):
+        start, end = datetime(2026, 9, 14, tzinfo=timezone.utc), datetime(2026, 10, 14, tzinfo=timezone.utc)
+        self.assertEqual(charts.line_chart([(end, 97.5)], start=start, end=end, tone="weight", label="x"), "")
+        svg = charts.line_chart([(start, 99.0), (end, 97.5)], start=start, end=end, tone="weight", label="x")
+        self.assertIn("<polyline", svg)
+        self.assertIn("99.0", svg)
+
+    def test_catalogue_search(self):
+        self.assertEqual([m.model for m in devices.search_catalogue("dl87")], ["DL8780"])
+        self.assertEqual([m.model for m in devices.search_catalogue(category="Oral care")], ["HX9393"])
+        self.assertEqual(devices.search_catalogue("nothing-like-this"), [])
 
 
 class BodyCompositionTests(unittest.TestCase):
@@ -185,10 +218,36 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         self.db.conn.close()
         self.tmp.cleanup()
 
+    async def test_first_visit_goes_to_onboarding(self):
+        resp = await self.client.get("/", allow_redirects=False)
+        self.assertEqual((resp.status, resp.headers["Location"]), (302, "/welcome"))
+        resp = await self.client.post("/welcome", data={"name": "Me", "sex": "male", "birth_date": "1990-01-01", "height_cm": "183", "start_weight_kg": "97.5"},
+                                      allow_redirects=False)
+        self.assertEqual(resp.headers["Location"], "/welcome/google")
+        [profile] = self.db.profiles()
+        self.assertEqual(resp.cookies["profile"].value, str(profile["id"]))
+        for path in ("/welcome/google", "/welcome/scale"):
+            self.assertEqual((await self.client.get(path)).status, 200, path)
+        resp = await self.client.get("/welcome", allow_redirects=False)
+        self.assertEqual(resp.headers["Location"], "/")
+
     async def test_pages_render(self):
-        for path in ("/", "/profiles", "/profiles/new", "/settings", "/api/status"):
+        me = self.db.create_profile(ME)
+        self.db.create_profile(GUEST)
+        self.hub.ingest(parse_a3_weight(WEIGHT_RAW), parse_a3_append(APPEND_RAW), WEIGHT_RAW, APPEND_RAW)
+        for path in ("/", "/?range=7", f"/?p={me}", "/history", "/history?view=all", "/history?view=unassigned", "/profiles",
+                     "/profiles/new", f"/profiles/{me}/edit", "/settings", "/devices", "/devices/add", "/devices/add?category=Scales",
+                     "/devices/add?q=dl8780", "/api/status"):
             resp = await self.client.get(path)
             self.assertEqual(resp.status, 200, path)
+        self.assertIn("97.5", await (await self.client.get("/")).text())
+
+    async def test_unmatched_weigh_asks_who_it_was(self):
+        self.db.create_profile(dict(ME, start_weight_kg=80.0))
+        self.db.create_profile(dict(GUEST, start_weight_kg=110.0))
+        self.hub.ingest(parse_a3_weight(WEIGHT_RAW), None, WEIGHT_RAW, None)
+        text = await (await self.client.get("/")).text()
+        self.assertIn("Who was this?", text)
 
     async def test_create_profile_and_reject_invalid(self):
         resp = await self.client.post("/profiles/new", data={"name": "", "sex": "x", "birth_date": "", "height_cm": "abc"})
@@ -212,6 +271,20 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("accounts.google.com", text)
         self.assertIsNotNone(self.db.oauth_pending_for(me))
 
+    async def test_settings_detour_can_be_left(self):
+        # Without an OAuth client, Connect sends the person to Settings. Its back arrow must not
+        # lead to the Connect page again, which would bounce straight back to Settings.
+        me = self.db.create_profile(ME)
+        resp = await self.client.get(f"/profiles/{me}/google?next=/profiles/{me}/edit", allow_redirects=False)
+        settings_url = resp.headers["Location"]
+        text = await (await self.client.get(settings_url)).text()
+        self.assertIn(f'class="icon-btn" href="/profiles/{me}/edit" aria-label="Back"', text)
+        self.assertIn("Save and continue", text)
+        self.db.set_setting("google_client_id", "cid")
+        self.db.set_setting("google_client_secret", "secret")
+        text = await (await self.client.get(f"/profiles/{me}/google?next=/")).text()
+        self.assertIn('href="/">Cancel</a>', text)
+
     async def test_manual_assignment_from_the_table(self):
         me = self.db.create_profile(dict(ME, start_weight_kg=None))
         measurement_id = self.hub.ingest(parse_a3_weight(WEIGHT_RAW), None, WEIGHT_RAW, None)
@@ -219,6 +292,45 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         resp = await self.client.post(f"/measurements/{measurement_id}/assign", data={"profile_id": str(me)})
         self.assertEqual(resp.status, 200)
         self.assertEqual(self.db.measurement(measurement_id)["profile_id"], me)
+
+
+class DeviceWebTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self.tmp = TemporaryDirectory()
+        self.db = Database(Path(self.tmp.name) / "hub.db")
+        self.hub = Hub(self.db)
+        self.listener = PairedListener()
+        self.client = TestClient(TestServer(create_app(self.hub, self.listener)))
+        await self.client.start_server()
+
+    async def asyncTearDown(self):
+        await self.client.close()
+        await self.hub.close()
+        self.db.conn.close()
+        self.tmp.cleanup()
+
+    async def test_hub_lists_the_scale_and_nearby_pairing(self):
+        self.assertIn("Bathroom scale", await (await self.client.get("/devices")).text())
+        text = await (await self.client.get("/devices/add")).text()
+        self.assertIn("Ready to pair", text)
+        resp = await self.client.post("/devices/pair", data={"next": "/devices/add"}, allow_redirects=False)
+        self.assertEqual(resp.headers["Location"], "/devices/add")
+        self.assertTrue(self.listener.pairing)
+        self.assertIn("Waiting for the scale", await (await self.client.get("/devices/add")).text())
+
+    async def test_rename_and_forget(self):
+        await self.client.post("/devices/scale", data={"name": "Upstairs scale", "room": "Bedroom"})
+        text = await (await self.client.get("/devices/scale")).text()
+        self.assertIn("Upstairs scale", text)
+        self.assertIn("Bedroom", text)
+        await self.client.post("/devices/scale/forget")
+        self.assertTrue(self.listener.forgotten)
+
+    async def test_redirect_targets_stay_on_this_site(self):
+        self.db.create_profile(ME)
+        measurement_id = self.hub.ingest(parse_a3_weight(WEIGHT_RAW), None, WEIGHT_RAW, None)
+        resp = await self.client.post(f"/measurements/{measurement_id}/retry", data={"next": "//evil.example"}, allow_redirects=False)
+        self.assertTrue(resp.headers["Location"].startswith("/?"))
 
 
 if __name__ == "__main__":

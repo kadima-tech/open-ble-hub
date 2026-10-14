@@ -32,6 +32,7 @@ COMMAND_IN = sig("8a82")
 COMMAND_OUT = sig("8a81")
 SCALE_SERVICE_UUIDS = {sig(short) for short in SCALE_SERVICES}
 IDLE_SECONDS = 45
+NEARBY_SECONDS = 90
 APPEND_WAIT_SECONDS = 3
 HUB_USER_NAME = "Hub"
 
@@ -50,6 +51,8 @@ class ScaleListener:
         self.last_error: str | None = None
         self.pairing_until: float = 0.0
         self.last_pair_result: str | None = None
+        self.nearby: dict[str, dict[str, Any]] = {}
+        self.pairing_request_at: float = 0.0
 
     # -- status / pairing --------------------------------------------------
     @property
@@ -69,6 +72,29 @@ class ScaleListener:
         self.last_pair_result = None
         self.hub.db.log(f"Pairing window open for {seconds} s. Hold the unit button on the scale for 3 s.")
 
+    def forget(self) -> None:
+        """Drop the stored pairing so the hub stops answering this scale until it is paired again."""
+        serial = self.hub.db.get_setting("scale_serial")
+        if serial:
+            self.store.put(serial, {})
+        self.hub.db.set_setting("scale_serial", None)
+        self.hub.db.set_setting("scale_address", None)
+        self.last_pair_result = None
+        self.hub.db.log("Scale forgotten. Pair it again to receive weighs.")
+
+    def nearby_devices(self) -> list[dict[str, Any]]:
+        """Scales advertised in the last NEARBY_SECONDS, newest first."""
+        cutoff = time.time() - NEARBY_SECONDS
+        recent_request = time.time() - self.pairing_request_at < NEARBY_SECONDS
+        found = []
+        for entry in self.nearby.values():
+            if entry["seen"] < cutoff:
+                continue
+            item = dict(entry)
+            item["pairing_mode"] = entry["pairing_mode"] or (recent_request and entry["address"] == self.address)
+            found.append(item)
+        return sorted(found, key=lambda item: item["seen"], reverse=True)
+
     def status(self) -> dict[str, Any]:
         return {
             "state": self.state,
@@ -79,6 +105,7 @@ class ScaleListener:
             "last_pair_result": self.last_pair_result,
             "last_seen": self.last_seen,
             "last_error": self.last_error,
+            "nearby": self.nearby_devices(),
         }
 
     def _scale_profile(self) -> tuple[int, int, str]:
@@ -125,6 +152,15 @@ class ScaleListener:
             name = (adv.local_name if adv else None) or device.name or ""
             uuids = list(adv.service_uuids) if adv and adv.service_uuids else []
             if (known and device.address.lower() == known) or looks_like_scale(name, uuids):
+                # DL8780 advertises as 1DL87801 while it waits to be paired, 0DL87801 otherwise.
+                self.nearby[device.address] = {
+                    "address": device.address,
+                    "name": name,
+                    "model": "DL8780",
+                    "rssi": getattr(adv, "rssi", None),
+                    "seen": time.time(),
+                    "pairing_mode": name.startswith("1"),
+                }
                 found.set_result(device)
 
         scanner = BleakScanner(detection_callback=lambda d, a: loop.call_soon_threadsafe(on_detect, d, a))
@@ -188,6 +224,7 @@ class ScaleListener:
             kind = command_field(first)
             pairing = bool(kind and kind[0] == "password")
             if pairing and not self.pairing_active():
+                self.pairing_request_at = time.time()
                 self.hub.db.log("The scale is in pairing mode. Open the pairing window in the UI first.", "warn")
                 return
             if not pairing and self.paired_record() is None:

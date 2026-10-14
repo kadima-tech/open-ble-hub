@@ -1,61 +1,71 @@
 # Design
 
-The design language of the Philips BLE Hub configuration UI (`ble_hub/web.py`, `ble_hub/static/app.css`) as it exists in the code.
+The design language of the Open BLE Hub web UI (`ble_hub/web.py`, `ble_hub/static/app.css`, `ble_hub/static/app.js`), called **Mineral**. It was chosen from the "Flow Directions" design explorations (onboarding → dashboard → device hub).
 
 ## Character
 
-A quiet utility on the home network: plain, calm and readable on a phone held in the bathroom. There are no images, web fonts or CDNs, because the Pi may have no internet and is slow. Pages are server-rendered HTML with a small inline script for live status.
+Calm, light and sage: a health tool for a household, read on a phone in the bathroom. Large, quiet numbers; white cards on a stone-green ground; one deep green accent. Nothing loads from the internet: the font is bundled, pages are server-rendered, and `app.js` only adds conveniences.
 
-## Color
+## Flow
 
-Tokens live on `:root` in `app.css`. Dark mode follows `prefers-color-scheme`.
+1. **Onboarding** (`/welcome`, shown while there are no people): step 1 creates the first profile, step 2 connects Google Health (or points to the one-time OAuth setup in Settings), step 3 pairs the scale. Steps 2 and 3 can be skipped. A three-segment progress bar shows the step.
+2. **Dashboard** (`/`): one person at a time, chosen with the profile switcher (remembered in a cookie; defaults to whoever weighed last). A "Who was this?" card leads when a weigh could not be matched. Then the weight card with chart and 7d/30d/90d/1y range, body-fat and lean-mass cards with sparklines, Google Health and Device hub rows, and recent weighs.
+3. **Device hub** (`/devices`): the hub's own status, devices needing attention pinned first, then devices grouped by room (or type). Search and filter chips appear once there are more than five devices; groups show four devices and fold the rest. A sticky "Add device" button.
+4. **Add device** (`/devices/add`): "Found nearby" first (devices in pairing mode get a Pair button), live pairing steps with a countdown, then a catalogue to search or browse by type with a support badge per model.
+
+Supporting pages: device detail (`/devices/{id}`), weighs (`/history`), people (`/profiles`), Google linking (`/profiles/{id}/google`), settings (`/settings`).
+
+## Colour
+
+Tokens live on `:root` in `app.css`; dark mode follows `prefers-color-scheme`.
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
-| `--bg` | `#f5f6f4` | `#121514` | page background |
-| `--surface` | `#ffffff` | `#1b1f1d` | cards, header, inputs |
-| `--surface-2` | `#eef0ec` | `#232826` | secondary buttons, active nav, muted badges |
-| `--text` | `#1c211f` | `#e7ebe8` | body text |
-| `--muted` | `#5d6662` | `#9aa49f` | labels, hints, timestamps |
-| `--border` | `#dde1dc` | `#2e3431` | card and table borders |
-| `--accent` | `#1f7a68` | `#4fb39d` | primary buttons, links, focus ring, "Getting started" card |
-| `--ok` / `--ok-bg` | `#1f7a4a` / `#e3f2e9` | `#6fcf97` / `#1d3327` | "Paired", "Sent", flash messages |
-| `--warn` / `--warn-bg` | `#8a5a00` / `#fbf0d9` | `#f2c063` / `#3a2f17` | "Pairing", "Queued", unmatched weigh rows |
+| `--bg` | `#eef1ec` | `#111613` | page ground |
+| `--surface` | `#ffffff` | `#1a211d` | cards, inputs, icon buttons |
+| `--surface-2` | `#f5f7f4` | `#212923` | icon tiles, fact tiles, inactive step numbers |
+| `--sunken` | `#dde3de` | `#0c100e` | segmented-control track |
+| `--text` / `--text-2` / `--muted` | `#18221e` / `#34413b` / `#56635d` | `#e6ece8` / `#c5cfc9` / `#9aa6a0` | body, secondary, labels and hints |
+| `--border` / `--divider` | `#d3dad5` / `#eef1ec` | `#2c3530` / `#242c27` | input borders / row dividers, chart grid |
+| `--accent` (+ `-hover`, `-soft`) | `#1f5e4f` | `#6fbfa6` | primary buttons, links, hub card, weight chart, "ok" badges |
+| `--warn-*` | text `#6b4a00`, bg `#fff4de`, border `#f0d9a8` | `#f2c063`, `#2e2510`, `#5a4618` | "Who was this?", needs attention, pairing countdown |
 | `--error` / `--error-bg` | `#b42318` / `#fde8e6` | `#ff8a80` / `#3d1f1d` | failures, destructive links, form errors |
+| `--tone-weight` / `--tone-fat` / `--tone-lean` | `#1f5e4f` / `#b86b2e` / `#3e6f9e` | `#6fbfa6` / `#e09a5e` / `#7fa9d6` | chart line per measure |
 
-There is a single accent (teal-green). Status is always shown with a text badge, never with color alone.
+Person avatars use a fixed five-colour palette (`.av-0`…`.av-4`, by profile id) with white initials. Status is always written out (badge text, row note, `aria-label` on dots), never colour alone.
 
 ## Typography
 
-- System UI stack (`--font`), base 16px with line height 1.5.
-- `h1` 1.5rem, `h2` 1.05rem, both semi-bold. The brand in the header is 650 weight.
-- Numbers in tables use tabular figures and are right-aligned.
-- `--mono` for addresses and code fragments.
+- **Instrument Sans** (variable, 400–700), bundled as `static/fonts/instrument-sans-latin-wght-normal.woff2` (OFL; licence beside it), falling back to `system-ui`.
+- Base 15px / 1.45. Page titles 24px/600; onboarding titles 32px/600 with −0.02em tracking; card titles 17px/600; eyebrows and labels 13px/500 muted; small print 12px.
+- Numbers: the main weight 56px/600 (−0.03em), secondary figures 26px/600, units in muted text beside them. Tabular figures throughout.
 
-## Spacing and layout
+## Spacing, shape and layout
 
-- 4px scale: `--space-1`…`--space-6` = 4, 8, 12, 16, 24, 32px.
-- Content is at most 1040px wide with a 16px side gutter.
-- Cards have a 10px radius (`--radius`), a 1px border and no shadow.
-- The overview puts Scale and Activity in an auto-fit grid (min 300px per column) and the Weighs table below at full width.
-- Below 640px, two-column form rows and fact lists stack into one column, and tables scroll horizontally inside `.table-wrap`.
+- 4px-based scale (`--space-1`…`--space-7` = 4, 8, 12, 16, 20, 24, 32px).
+- Radii: cards 22px (`--r-lg`), small cards and tiles 16–20px, inputs and buttons 14px, chips and badges fully round.
+- Cards have no border; the white surface on the stone ground separates them. Shadows only on floating things (menus, the sticky button).
+- Content column 560px (480px for onboarding and Google linking); the dashboard widens to 1040px and splits into two columns from 900px.
 
 ## Components
 
-- **Header:** brand plus text nav; the active item has a `--surface-2` pill.
-- **Card:** a `.card-head` row holds the title and a badge on the right.
-- **Badge:** a pill in four tones: `ok`, `warn`, `error`, `muted`.
-- **Buttons:** `.primary` (accent fill), `.secondary` (surface with border), and `button.link` (text only; `.danger` for destructive).
-- **Forms:** labels wrap their inputs, with `.hint` text underneath. Validation errors appear in a single `.errors` block at the top. Inputs are at least 40px tall.
-- **Weighs table:** rows needing a person get the `--warn-bg` fill. The person select submits as soon as it changes, with a `<noscript>` save button as fallback.
-- **Flash:** a green banner after redirects (POST, then redirect, then GET).
+- **Top bar:** a 44px square back button, title with a muted sub-line, optional icon buttons on the right. On the dashboard the profile switcher (a `<details>` menu) takes the title's place.
+- **Cards:** `.card` with `.card-head` (title left, badge or link right); `.notice` in warn colours; `.ok-card` and `.error-card` for outcomes.
+- **Rows:** `.row-item` with a 36px `.icon-tile`, two-line text and a trailing badge, dot or chevron; divided by `--divider` lines inside a `.list-card`.
+- **Buttons:** primary (accent fill, 48px; 56px when sticky), secondary (white with border), ghost (accent text), `btn-link` (text only; `.danger` red).
+- **Segmented control:** `.seg` for range tabs (links) and `.seg-input` for radio choices such as sex.
+- **Chips:** filter links; the selected chip is filled with `--text`.
+- **Forms:** labels above inputs, 52px fields, units inside the field on the right (`.with-unit`), errors in one block at the top.
+- **Numbered steps:** `.numbered` with round counters; `.is-done` shows a check on the accent, `.is-now` a warn ring.
+- **Charts:** server-rendered SVG (`ble_hub/charts.py`): one line with a 9% area, three grid lines, a dot on the latest value, min and max to the right, start date and "Today" beneath. Sparklines on the small cards.
 
 ## Interaction
 
-- Every action is a plain form POST followed by a redirect. Destructive actions ask for confirmation with `confirm()`.
-- The overview polls `/api/status` every 4s and reloads when something changes. The pairing countdown ticks each second.
-- No animation.
+- Every action is a form POST then a redirect (with an optional same-site `next`), confirmed by a green flash. Destructive forms carry `data-confirm`.
+- Pages with live state poll `/api/status` every 4s and reload when it changes, but not while someone is typing or has a menu open. The pairing countdown ticks each second.
+- Motion: only the "Searching" spinner, which stops under `prefers-reduced-motion`.
+- Touch targets at least 44px.
 
 ## Voice
 
-Short, direct sentences that say what happens and what to do next ("Hold the unit button on the scale for 3 seconds"). Use "weigh" for a single measurement and "person" or "profile" for users.
+Short, direct and friendly. Say what happens and what to do next ("Hold the unit button on the scale for 3 seconds"). "Weigh" for one measurement, "person" in the UI and "profile" in setup, "device hub" for the device list. Body-fat values are labelled as estimates with their ± range.

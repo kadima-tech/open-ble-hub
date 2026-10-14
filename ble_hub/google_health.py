@@ -129,7 +129,7 @@ def weight_point(weight_kg: float, measured_at: datetime, utc_offset_s: int) -> 
         "weight": {
             "weightGrams": round(weight_kg * 1000),
             "sampleTime": sample_time(measured_at, utc_offset_s),
-            "notes": "Philips DL8780 via philips-ble-hub",
+            "notes": "Philips DL8780 via open-ble-hub",
         },
     }
 

@@ -213,6 +213,25 @@ class Database:
             (limit,),
         ).fetchall()
 
+    def profile_measurements(self, profile_id: int, *, since: str | None = None, limit: int | None = None) -> list[sqlite3.Row]:
+        """A person's weighs, newest first."""
+        sql = "SELECT * FROM measurements WHERE profile_id = ?"
+        params: list[Any] = [profile_id]
+        if since:
+            sql += " AND measured_at >= ?"
+            params.append(since)
+        sql += " ORDER BY measured_at DESC"
+        if limit:
+            sql += " LIMIT ?"
+            params.append(limit)
+        return self.conn.execute(sql, params).fetchall()
+
+    def unassigned(self) -> list[sqlite3.Row]:
+        return self.conn.execute("SELECT * FROM measurements WHERE profile_id IS NULL ORDER BY measured_at DESC").fetchall()
+
+    def latest_measurement(self) -> sqlite3.Row | None:
+        return self.conn.execute("SELECT * FROM measurements ORDER BY measured_at DESC LIMIT 1").fetchone()
+
     def update_measurement(self, measurement_id: int, values: dict[str, Any]) -> None:
         sets = ", ".join(f"{column} = ?" for column in values)
         self.conn.execute(f"UPDATE measurements SET {sets} WHERE id = ?", [*values.values(), measurement_id])
