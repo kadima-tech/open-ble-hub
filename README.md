@@ -4,12 +4,14 @@ A self-hosted hub for the Bluetooth devices around your home. It listens for the
 
 ## Mission
 
-Open-source the communication protocols for the Bluetooth devices around your home, both old and new, so you are not dependent on the manufacturer. Keep the readings on hardware you run instead of submitting them to the maker's cloud. Syncing to Google Health is opt-in, per person. Apple Health is a later goal and is not in the hub today.
+We believe the devices in your home should work for you, not for their manufacturer. Your data belongs to you, on your own hardware, for as long as the device keeps working.
 
-- **Local-first.** Profiles and readings live in the hub's database. A reading is uploaded only after that person connects a cloud account.
-- **Manufacturer-independent.** The hub talks to the device itself. It does not need the maker's app or account.
-- **Open protocols.** Handshakes, packet layouts and clients live in this repository, so the next device can be added in the open.
-- **Cloud sync is opt-in.** Each person can connect their own Google account from onboarding or their profile. Until they do, their readings stay on the hub. Connecting later also sends readings already stored here. Disconnecting stops further uploads.
+We believe in:
+
+- **Your data staying on your own hardware by default.** Profiles and readings live in the hub's database. A reading is uploaded only after that person connects a cloud account.
+- **Open protocols, so no device is locked to one company's app or cloud.** The hub talks to the device itself. Handshakes, packet layouts and clients live in this repository, so the next device can be added in the open.
+- **Cloud sync that is opt-in, per person, and easy to turn off.** Today that is Google Health. Each person connects their own account from onboarding or their profile. Until they do, readings stay on the hub. Connecting later also sends readings already stored here. Disconnecting that account stops further uploads. While the account stays linked, uploads continue; there is no separate pause switch. Apple Health is not in the hub today.
+- **Keeping old devices out of landfill by keeping them useful.** Open notes for devices old and new are how a device stays usable after its maker moves on.
 
 Open BLE Hub is an independent project. It is not affiliated with or endorsed by Philips or any other device maker. It is not a medical device.
 
