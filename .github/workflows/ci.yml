@@ -42,7 +42,9 @@ jobs:
       fail-fast: false
       matrix:
         # 3.11 is the minimum in README and CONTRIBUTING. 3.12–3.14 are the
-        # later releases the same syntax runs on. Tests do not open Bluetooth.
+        # later releases the same syntax runs on. make test installs
+        # requirements.txt, including bleak, and runs the Bluetooth fakes in
+        # tests/test_bluetooth.py. Those tests do not open a radio.
         os: [ubuntu-latest, macos-latest]
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
