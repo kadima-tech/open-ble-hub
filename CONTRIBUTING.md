@@ -1,0 +1,85 @@
+# Contributing
+
+Open BLE Hub welcomes fixes and support for more devices. Contributions are licensed under the [MIT License](LICENSE), copyright 2026 Kadima Tech.
+
+## Development setup
+
+Python 3.11 or newer, on macOS or Linux (including Raspberry Pi). Windows is not supported. A Bluetooth LE adapter is required only when you talk to a real device.
+
+```bash
+git clone https://github.com/kadima-tech/open-ble-hub.git
+cd open-ble-hub
+make venv
+```
+
+`make venv` creates `.venv` and installs [requirements.txt](requirements.txt) (`bleak`, `aiohttp`). It reinstalls when that file changes. `make clean` removes `.venv` and leaves `./data` in place.
+
+| Command | What it does |
+| --- | --- |
+| `make run` | Hub with Bluetooth. UI at <http://localhost:8080>, data in `./data`. |
+| `make ui` | Same UI with `--no-bluetooth`. |
+| `make test` | Unit tests. No device and no network. |
+| `make scan`, `make scale`, `make watch` | `python -m philips_ble` against a live device. Pass extra flags with `ARGS`. |
+| `make help` | Every target. |
+
+`make run PORT=9000 DATA_DIR=/tmp/hub` overrides the port and data folder. On macOS, allow Bluetooth for your terminal under System Settings → Privacy & Security → Bluetooth.
+
+`./data` holds the SQLite database. `.philips-scale.json` holds the scale password and broadcast id. Both are gitignored. Deploy a Pi with `sudo ./deploy/install.sh` from a copy of the repository on that machine.
+
+## Tests
+
+`make test` runs the standard-library test runner:
+
+```bash
+.venv/bin/python -m unittest discover -s tests
+```
+
+Tests live in `tests/test_*.py` and are built from captured packets and fakes (`unittest.mock`, `aiohttp.test_utils`). They do not need a scale, an adapter, or Google credentials.
+
+New behaviour needs tests in that style. A protocol change should carry the bytes it was checked against, the way `tests/test_scale_packets.py` and `tests/test_scale_link.py` do.
+
+pytest is not installed or configured. `.pytest_cache/` is listed in `.gitignore`, and there is no coverage tool.
+
+## Linters and CI
+
+No formatter, linter, or type checker is configured, and there is no pre-commit hook. Match the file you are editing.
+
+There is no GitHub Actions workflow or other CI. Run `make test` and say so in the pull request. When CI exists, it has to pass before merge.
+
+## Pull requests
+
+Branch from `main`. Keep the change focused.
+
+- Describe what changed, why, and how you tested it.
+- Add tests for new behaviour. `make test` passes.
+- Pass CI once this repository has it.
+- A new device follows [Adding a device](README.md#adding-a-device): notes in `docs/`, a client with packet tests, then hub wiring in `ble_hub/listener.py`, `ble_hub/devices.py`, and `ble_hub/google_health.py` when a new measurement is written.
+- UI work follows [DESIGN.md](DESIGN.md). Pages stay server-rendered and usable with no internet; the font is vendored.
+
+## Coding style
+
+- Python 3.11+. Modules use `from __future__ import annotations` and type hints (`str | None`, `dict[str, Any]`).
+- Double quotes. A short module docstring. Imports are standard library, then third party, then local.
+- Comments explain a protocol detail or a captured-packet fact. Names say what the value is (`weight_kg`, `refresh_token`).
+- Device bytes stay in a client package such as `philips_ble/`, with the write-up in `docs/`. The hub stays in `ble_hub/`.
+- Runtime dependencies are only the lines in `requirements.txt`. There is no lockfile and no `pyproject.toml`. The app is run as `python -m ble_hub` and `python -m philips_ble`, not installed as a distribution.
+
+A new dependency needs a reason in the pull request: what the standard library cannot do, and that it still installs on a Raspberry Pi. `deploy/install.sh` uses [piwheels](https://www.piwheels.org/simple) for 32-bit ARM.
+
+## Security
+
+Report vulnerabilities privately to [jacobus@kadima-tech.com](mailto:jacobus@kadima-tech.com). Do not open a public GitHub issue, and do not put exploit details in a pull request. This repository has no `SECURITY.md`.
+
+Take extra care with health data and Google credentials:
+
+- The database (`./data/open-ble-hub.db`, or `/var/lib/open-ble-hub/open-ble-hub.db` on a Pi) stores profiles, weighs, the Google OAuth client secret, and each person's refresh and access tokens.
+- Scale pairing secrets live in `.philips-scale.json` and in the data directory.
+- The web app has no login and listens on all interfaces by default. It is meant for a home network.
+
+Do not commit databases, tokens, client secrets, pairing files, or `readings.jsonl`. Do not log them. Tests and examples use synthetic profiles and captured protocol bytes, not a real household. Leave `data/`, `.philips-scale.json`, and `.philips-scale-*.json` gitignored.
+
+## License
+
+This project is under the MIT License, copyright 2026 Kadima Tech. See [LICENSE](LICENSE). Sending a contribution means you license it under those terms.
+
+The Instrument Sans files in `ble_hub/static/fonts/` stay under the SIL Open Font License (`OFL.txt` beside them). That license is separate from MIT.
