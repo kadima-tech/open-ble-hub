@@ -11,7 +11,7 @@ import asyncio
 import json
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -51,7 +51,9 @@ class Sighting:
 @dataclass
 class Log:
     path: Path | None
-    counts: dict[str, int] = field(default_factory=lambda: {"read": 0, "notify": 0, "info": 0})
+    counts: dict[str, int] = field(
+        default_factory=lambda: {"read": 0, "notify": 0, "info": 0}
+    )
     touched: float = 0.0
     _hinted: bool = False
 
@@ -59,7 +61,7 @@ class Log:
         self.touched = time.monotonic()
         self.counts[kind] = self.counts.get(kind, 0) + 1
         record = {
-            "time": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "time": datetime.now(UTC).isoformat(timespec="seconds"),
             "event": kind,
             **payload,
         }
@@ -91,7 +93,9 @@ class Log:
 
     def encryption_hint(self, exc: BaseException) -> None:
         text = str(exc).lower()
-        if self._hinted or not any(word in text for word in ("encrypt", "auth", "pair", "insufficient")):
+        if self._hinted or not any(
+            word in text for word in ("encrypt", "auth", "pair", "insufficient")
+        ):
             return
         self._hinted = True
         self.event(
@@ -104,13 +108,21 @@ class Log:
 
 
 def _name_of(device: BLEDevice, adv) -> str:
-    return (adv.local_name if adv is not None and adv.local_name else None) or device.name or ""
+    return (
+        (adv.local_name if adv is not None and adv.local_name else None)
+        or device.name
+        or ""
+    )
 
 
 async def discover(seconds: float) -> list[Sighting]:
     found = await BleakScanner.discover(timeout=seconds, return_adv=True)
     sightings: list[Sighting] = []
-    pairs = found.values() if isinstance(found, dict) else ((device, None) for device in found)
+    pairs = (
+        found.values()
+        if isinstance(found, dict)
+        else ((device, None) for device in found)
+    )
     for device, adv in pairs:
         uuids = list(adv.service_uuids) if adv is not None else []
         name = _name_of(device, adv)
@@ -119,7 +131,10 @@ async def discover(seconds: float) -> list[Sighting]:
         rssi = None
         if adv is not None:
             rssi = adv.rssi
-            manufacturer = {f"{company:04x}": blob.hex(" ") for company, blob in adv.manufacturer_data.items()}
+            manufacturer = {
+                f"{company:04x}": blob.hex(" ")
+                for company, blob in adv.manufacturer_data.items()
+            }
         sightings.append(
             Sighting(
                 address=device.address,
@@ -146,7 +161,9 @@ def format_sighting(item: Sighting) -> str:
     if item.service_uuids:
         lines.append("  services: " + ", ".join(item.service_uuids))
     if item.manufacturer:
-        rendered = ", ".join(f"{key}:{value}" for key, value in item.manufacturer.items())
+        rendered = ", ".join(
+            f"{key}:{value}" for key, value in item.manufacturer.items()
+        )
         lines.append("  manufacturer: " + rendered)
     return "\n".join(lines)
 
@@ -187,7 +204,10 @@ def _interesting(uuid: str, service_uuid: str, mode: str) -> bool:
     if mode == "brush":
         if uuid.lower().startswith("477ea600"):
             return short in CBT_CHARS
-        return service_uuid.lower() == CONDOR_SCAN_SERVICE or service_short in {DIS_SERVICE, BATTERY_SERVICE}
+        return service_uuid.lower() == CONDOR_SCAN_SERVICE or service_short in {
+            DIS_SERVICE,
+            BATTERY_SERVICE,
+        }
     return False
 
 
@@ -277,7 +297,9 @@ async def _collect(
         if short_of(char.uuid) == "2a25":
             serial = data.split(b"\x00", 1)[0].decode("utf-8", "replace").strip()
         if mode == "scale" and short_of(char.uuid) in {"8a21", "8a22", "8a24", "a402"}:
-            value = parse_scale_notification(short_of(char.uuid), data, family=family, previous=None)
+            value = parse_scale_notification(
+                short_of(char.uuid), data, family=family, previous=None
+            )
         else:
             value = interpret(kind if known else "hex", data)
         log.event("read", name=name, uuid=char.uuid, value=value)
@@ -288,8 +310,15 @@ async def _collect(
     def on_notify(uuid: str, name: str, data: bytes) -> None:
         nonlocal previous
         if mode == "scale" and short_of(uuid) in {"8a21", "8a22", "8a24", "a402"}:
-            value = parse_scale_notification(short_of(uuid), data, family=family, previous=previous)
-            if "error" not in value and value.get("packet") in {"a2-weight", "a3-weight", "a2-fat", "a3-append"}:
+            value = parse_scale_notification(
+                short_of(uuid), data, family=family, previous=previous
+            )
+            if "error" not in value and value.get("packet") in {
+                "a2-weight",
+                "a3-weight",
+                "a2-fat",
+                "a3-append",
+            }:
                 previous = value
         else:
             kind = "hex"
@@ -316,7 +345,9 @@ async def _collect(
         except Exception as exc:
             log.event("info", message=f"subscribe {name} failed: {exc}")
 
-    write_char = next((char for char, _known in subscribable if short_of(char.uuid) == "8a81"), None)
+    write_char = next(
+        (char for char, _known in subscribable if short_of(char.uuid) == "8a81"), None
+    )
     if write_char is None and mode == "scale":
         for service in services:
             for char in service.characteristics:
@@ -346,7 +377,10 @@ async def _collect(
                 release=idle_seconds is None,
             )
         elif mode == "scale":
-            log.event("info", message="Characteristic 8A81 was not found, so no command was written.")
+            log.event(
+                "info",
+                message="Characteristic 8A81 was not found, so no command was written.",
+            )
             if idle_seconds is None:
                 await asyncio.sleep(seconds)
         else:
@@ -368,7 +402,9 @@ async def run_scan(seconds: float, show_all: bool) -> int:
         sightings = await discover(seconds)
     except BleakError as exc:
         print(f"Scan failed: {exc}")
-        print("Allow Bluetooth for this terminal in System Settings, Privacy & Security, Bluetooth.")
+        print(
+            "Allow Bluetooth for this terminal in System Settings, Privacy & Security, Bluetooth."
+        )
         return 1
     matches = [item for item in sightings if item.kinds]
     shown = sightings if show_all else matches
@@ -377,7 +413,9 @@ async def run_scan(seconds: float, show_all: bool) -> int:
             print("No advertisements.")
         else:
             print("No scale or Sonicare advertisement in this window.")
-            print(f"{len(sightings)} other advertisements were ignored. Re-run with --all to list them.")
+            print(
+                f"{len(sightings)} other advertisements were ignored. Re-run with --all to list them."
+            )
         return 1
     for item in shown:
         print(format_sighting(item))
@@ -408,20 +446,29 @@ async def run_collect(
         sightings = await discover(scan_seconds)
     except BleakError as exc:
         print(f"Scan failed: {exc}")
-        print("Allow Bluetooth for this terminal in System Settings, Privacy & Security, Bluetooth.")
+        print(
+            "Allow Bluetooth for this terminal in System Settings, Privacy & Security, Bluetooth."
+        )
         return 1
     wanted = {"scale"} if mode == "scale" else {"toothbrush", "toothbrush-condor"}
     matches = [item for item in sightings if wanted & set(item.kinds)]
     chosen: Sighting | None = None
     if address:
         needle = address.lower()
-        chosen = next((item for item in sightings if item.address.lower() == needle), None)
+        chosen = next(
+            (item for item in sightings if item.address.lower() == needle), None
+        )
         if chosen is None:
-            log.event("info", message=f"{address} was not in this scan. Connecting by address anyway.")
+            log.event(
+                "info",
+                message=f"{address} was not in this scan. Connecting by address anyway.",
+            )
     elif len(matches) == 1:
         chosen = matches[0]
     elif not matches:
-        print(f"No {mode} advertisement. Run `python -m philips_ble scan --all` and pass --address.")
+        print(
+            f"No {mode} advertisement. Run `python -m philips_ble scan --all` and pass --address."
+        )
         return 1
     else:
         print(f"Several {mode} advertisements. Pass --address.")
@@ -434,7 +481,11 @@ async def run_collect(
     label = chosen.address if chosen is not None else address
     log.event("info", message=f"Connecting to {label}.")
     try:
-        store = ScaleStore(store_path) if mode == "scale" and store_path is not None else None
+        store = (
+            ScaleStore(store_path)
+            if mode == "scale" and store_path is not None
+            else None
+        )
         async with BleakClient(target, timeout=40) as client:
             await _collect(
                 client,
@@ -488,7 +539,10 @@ def _sighting_from(device: BLEDevice, adv) -> Sighting:
     rssi = None
     if adv is not None:
         rssi = adv.rssi
-        manufacturer = {f"{company:04x}": blob.hex(" ") for company, blob in adv.manufacturer_data.items()}
+        manufacturer = {
+            f"{company:04x}": blob.hex(" ")
+            for company, blob in adv.manufacturer_data.items()
+        }
     return Sighting(
         address=device.address,
         name=name,
@@ -510,7 +564,9 @@ async def _wait_for_scale(address: str | None, log: Log) -> Sighting:
         if found.done():
             return
         sighting = _sighting_from(device, adv)
-        if not matches_scale(sighting.name, sighting.service_uuids, sighting.address, address or ""):
+        if not matches_scale(
+            sighting.name, sighting.service_uuids, sighting.address, address or ""
+        ):
             return
         found.set_result(sighting)
 
@@ -585,4 +641,7 @@ async def run_watch(
         except Exception as exc:
             log.event("info", message=f"Session failed: {type(exc).__name__}: {exc!r}")
         notes = log.counts.get("notify", 0)
-        log.event("info", message=f"Session ended with {notes} notifications so far. Watching again.")
+        log.event(
+            "info",
+            message=f"Session ended with {notes} notifications so far. Watching again.",
+        )

@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
-from philips_ble.uuids import CONDOR_SCAN_SERVICE, SCALE_SERVICES, SONICARE_SCAN_SERVICE, sig
+from philips_ble.uuids import (
+    CONDOR_SCAN_SERVICE,
+    SCALE_SERVICES,
+    SONICARE_SCAN_SERVICE,
+    sig,
+)
 
 
-def matches_scale(name: str, service_uuids: list[str], address: str = "", wanted_address: str = "") -> bool:
+def matches_scale(
+    name: str, service_uuids: list[str], address: str = "", wanted_address: str = ""
+) -> bool:
     """True when an advertisement is the scale this listener should take.
 
     A requested address has to match. Without one, a Lifesense scale service

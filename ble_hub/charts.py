@@ -5,7 +5,15 @@ from __future__ import annotations
 from datetime import datetime
 
 
-def _scale(points: list[tuple[datetime, float]], start: datetime, end: datetime, width: float, height: float, pad: float, min_span: float):
+def _scale(
+    points: list[tuple[datetime, float]],
+    start: datetime,
+    end: datetime,
+    width: float,
+    height: float,
+    pad: float,
+    min_span: float,
+):
     values = [value for _, value in points]
     lo, hi = min(values), max(values)
     if hi - lo < min_span:
@@ -14,7 +22,9 @@ def _scale(points: list[tuple[datetime, float]], start: datetime, end: datetime,
     span_t = max((end - start).total_seconds(), 1.0)
 
     def x(when: datetime) -> float:
-        return round(min(max((when - start).total_seconds() / span_t, 0.0), 1.0) * width, 1)
+        return round(
+            min(max((when - start).total_seconds() / span_t, 0.0), 1.0) * width, 1
+        )
 
     def y(value: float) -> float:
         return round(pad + (hi - value) / (hi - lo) * (height - 2 * pad), 1)
@@ -22,7 +32,15 @@ def _scale(points: list[tuple[datetime, float]], start: datetime, end: datetime,
     return x, y, lo, hi
 
 
-def line_chart(points: list[tuple[datetime, float]], *, start: datetime, end: datetime, tone: str, label: str, min_span: float = 1.0) -> str:
+def line_chart(
+    points: list[tuple[datetime, float]],
+    *,
+    start: datetime,
+    end: datetime,
+    tone: str,
+    label: str,
+    min_span: float = 1.0,
+) -> str:
     """Trend line with a soft area, three grid lines and a dot on the latest value.
 
     ``points`` are oldest first. Returns the SVG and the y-axis bounds as HTML.
@@ -49,11 +67,20 @@ def line_chart(points: list[tuple[datetime, float]], *, start: datetime, end: da
 </div>"""
 
 
-def sparkline(points: list[tuple[datetime, float]], *, start: datetime, end: datetime, tone: str, min_span: float = 1.0) -> str:
+def sparkline(
+    points: list[tuple[datetime, float]],
+    *,
+    start: datetime,
+    end: datetime,
+    tone: str,
+    min_span: float = 1.0,
+) -> str:
     if len(points) < 2:
         return ""
     width, height, pad = 200.0, 48.0, 6.0
     x, y, _, _ = _scale(points, start, end, width, height, pad, min_span)
     coords = " ".join(f"{x(when)},{y(value)}" for when, value in points)
-    return (f'<svg viewBox="0 0 {width:g} {height:g}" class="spark tone-{tone}" aria-hidden="true" preserveAspectRatio="none">'
-            f'<polyline points="{coords}" class="chart-line" vector-effect="non-scaling-stroke"/></svg>')
+    return (
+        f'<svg viewBox="0 0 {width:g} {height:g}" class="spark tone-{tone}" aria-hidden="true" preserveAspectRatio="none">'
+        f'<polyline points="{coords}" class="chart-line" vector-effect="non-scaling-stroke"/></svg>'
+    )

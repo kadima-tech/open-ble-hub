@@ -1,5 +1,7 @@
 """Run the Open BLE Hub: Bluetooth listener, Google uploads and the configuration UI.
 
+Example::
+
     python -m ble_hub --data-dir /var/lib/open-ble-hub --port 8080
 """
 
@@ -22,8 +24,17 @@ class NoBluetooth:
     """Stand-in listener for running the UI without a Bluetooth adapter."""
 
     def status(self) -> dict:
-        return {"state": "disabled", "address": None, "paired": False, "pairing": False, "pairing_seconds_left": 0,
-                "last_pair_result": None, "last_seen": None, "last_error": "Started with --no-bluetooth.", "nearby": []}
+        return {
+            "state": "disabled",
+            "address": None,
+            "paired": False,
+            "pairing": False,
+            "pairing_seconds_left": 0,
+            "last_pair_result": None,
+            "last_seen": None,
+            "last_error": "Started with --no-bluetooth.",
+            "nearby": [],
+        }
 
     def start_pairing(self, seconds: int = 180) -> None:
         pass
@@ -61,11 +72,25 @@ async def serve(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="open-ble-hub", description="Bluetooth health devices to Google Health")
-    parser.add_argument("--data-dir", default="data", help="Where the database and scale pairing live (default ./data)")
-    parser.add_argument("--host", default="0.0.0.0", help="Address for the UI (default all interfaces)")
-    parser.add_argument("--port", type=int, default=8080, help="Port for the UI (default 8080)")
-    parser.add_argument("--no-bluetooth", action="store_true", help="Run the UI only, without the scale listener")
+    parser = argparse.ArgumentParser(
+        prog="open-ble-hub", description="Bluetooth health devices to Google Health"
+    )
+    parser.add_argument(
+        "--data-dir",
+        default="data",
+        help="Where the database and scale pairing live (default ./data)",
+    )
+    parser.add_argument(
+        "--host", default="0.0.0.0", help="Address for the UI (default all interfaces)"
+    )
+    parser.add_argument(
+        "--port", type=int, default=8080, help="Port for the UI (default 8080)"
+    )
+    parser.add_argument(
+        "--no-bluetooth",
+        action="store_true",
+        help="Run the UI only, without the scale listener",
+    )
     args = parser.parse_args()
     logging.basicConfig(level=logging.WARNING)
     with contextlib.suppress(KeyboardInterrupt):

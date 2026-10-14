@@ -31,18 +31,34 @@ def reference_weight(recent: list[float], start_weight: float | None) -> float |
     return start_weight
 
 
-def choose_profile(weight: float, references: dict[int, float | None], *, tolerance: float = TOLERANCE_KG, margin: float = MARGIN_KG) -> Choice:
+def choose_profile(
+    weight: float,
+    references: dict[int, float | None],
+    *,
+    tolerance: float = TOLERANCE_KG,
+    margin: float = MARGIN_KG,
+) -> Choice:
     known = sorted(
-        ((abs(weight - ref), pid) for pid, ref in references.items() if ref is not None),
+        (
+            (abs(weight - ref), pid)
+            for pid, ref in references.items()
+            if ref is not None
+        ),
         key=lambda item: item[0],
     )
     if not known:
         return Choice(None, "no profile has a reference weight yet")
     best_diff, best_id = known[0]
     if best_diff > tolerance:
-        return Choice(None, f"no profile within {tolerance:g} kg (closest {best_diff:.1f} kg away)")
+        return Choice(
+            None,
+            f"no profile within {tolerance:g} kg (closest {best_diff:.1f} kg away)",
+        )
     if len(known) > 1:
         second_diff = known[1][0]
         if second_diff <= tolerance and second_diff - best_diff < margin:
-            return Choice(None, f"two profiles within {tolerance:g} kg and less than {margin:g} kg apart")
+            return Choice(
+                None,
+                f"two profiles within {tolerance:g} kg and less than {margin:g} kg apart",
+            )
     return Choice(best_id, f"closest profile, {best_diff:.1f} kg from its reference")

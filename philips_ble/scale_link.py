@@ -17,10 +17,11 @@ import asyncio
 import json
 import secrets
 import struct
+from collections.abc import Callable
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_EVEN
+from decimal import ROUND_HALF_EVEN, Decimal
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from zoneinfo import ZoneInfo
 
 SHANGHAI = ZoneInfo("Asia/Shanghai")
@@ -108,7 +109,9 @@ def height_centimetres_bytes(height_cm: int) -> bytes:
     if not 100 <= height_cm <= 204:
         raise ValueError("height must be 100..204 cm, the range pins/c/i accepts")
     metres = _f32(_f32(height_cm) / _f32(100.0))
-    text = format(Decimal(metres).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN), "f")
+    text = format(
+        Decimal(metres).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN), "f"
+    )
     parsed = _f32(float(text))
     magnitude = int(_f32(parsed * _f32(100.0)))
     if not -2048 <= magnitude <= 2047:
@@ -135,7 +138,14 @@ def goal_weight_bytes(kg: float) -> bytes:
     text = f"{float(kg):.1f}"
     mantissa = int(text.replace(".", ""))
     exponent = -(len(text) - 1 - text.index("."))
-    return bytes((mantissa & 0xFF, (mantissa >> 8) & 0xFF, (mantissa >> 16) & 0xFF, exponent & 0xFF))
+    return bytes(
+        (
+            mantissa & 0xFF,
+            (mantissa >> 8) & 0xFF,
+            (mantissa >> 16) & 0xFF,
+            exponent & 0xFF,
+        )
+    )
 
 
 def user_info_frame(
@@ -188,9 +198,16 @@ def utc_frame(moment: datetime | None = None) -> bytes:
     if when.tzinfo is not None:
         when = when.astimezone().replace(tzinfo=None)
     seconds = int((when - LOCAL_EPOCH).total_seconds())
-    if seconds < 0:
-        seconds = 0
-    return bytes((0x02, seconds & 0xFF, (seconds >> 8) & 0xFF, (seconds >> 16) & 0xFF, (seconds >> 24) & 0xFF))
+    seconds = max(seconds, 0)
+    return bytes(
+        (
+            0x02,
+            seconds & 0xFF,
+            (seconds >> 8) & 0xFF,
+            (seconds >> 16) & 0xFF,
+            (seconds >> 24) & 0xFF,
+        )
+    )
 
 
 def disconnect_frame() -> bytes:
@@ -235,7 +252,9 @@ def new_broadcast_id() -> bytes:
     return secrets.token_bytes(4)
 
 
-async def _take(queue: asyncio.Queue[bytes], opcode: int, timeout: float) -> bytes | None:
+async def _take(
+    queue: asyncio.Queue[bytes], opcode: int, timeout: float
+) -> bytes | None:
     loop = asyncio.get_running_loop()
     deadline = loop.time() + timeout
     while True:
@@ -287,7 +306,9 @@ async def run_scale_handshake(
 
     kind = command_field(first)
     saved = store.get(device_key) or {}
-    password = password_override or (hex_decode(saved["password"]) if saved.get("password") else None)
+    password = password_override or (
+        hex_decode(saved["password"]) if saved.get("password") else None
+    )
     profile = _profile(age, height_cm, sex) or _profile(
         saved.get("age"), saved.get("height_cm"), saved.get("sex")
     )
@@ -295,7 +316,10 @@ async def run_scale_handshake(
     answered = False
     if kind and kind[0] == "password":
         password = kind[1]
-        log("info", message=f"Scale sent a pairing password ({hex_encode(password)}). Starting the A3 pair queue.")
+        log(
+            "info",
+            message=f"Scale sent a pairing password ({hex_encode(password)}). Starting the A3 pair queue.",
+        )
         answered = await _pair(
             write=write,
             queue=queue,
@@ -323,12 +347,17 @@ async def run_scale_handshake(
                 ),
             )
             return
-        log("info", message="Scale sent a sync random. Answering with the stored password.")
+        log(
+            "info",
+            message="Scale sent a sync random. Answering with the stored password.",
+        )
         await _sync(
             write=write,
             queue=queue,
             random_bytes=kind[1],
-            broadcast_id=hex_decode(saved["broadcast_id"]) if saved.get("broadcast_id") else None,
+            broadcast_id=hex_decode(saved["broadcast_id"])
+            if saved.get("broadcast_id")
+            else None,
             password=password,
             user_number=saved.get("user_number", user_number),
             profile=profile,
@@ -336,15 +365,29 @@ async def run_scale_handshake(
             saved=saved,
         )
         if profile is not None:
-            store.put(device_key, {**saved, **_profile_record(*profile), "user_number": user_number, "user_name": user_name})
+            store.put(
+                device_key,
+                {
+                    **saved,
+                    **_profile_record(*profile),
+                    "user_number": user_number,
+                    "user_name": user_name,
+                },
+            )
         answered = True
     else:
-        log("info", message=f"8A82 indication was not a password or random packet: {first.hex(' ')}")
+        log(
+            "info",
+            message=f"8A82 indication was not a password or random packet: {first.hex(' ')}",
+        )
         return
 
     if not answered:
         if not release:
-            log("info", message="Link stays open. Indications will be logged until the scale drops it.")
+            log(
+                "info",
+                message="Link stays open. Indications will be logged until the scale drops it.",
+            )
         return
     if kind and kind[0] == "password":
         # d/g.i: once UTC is acknowledged, only the blood-pressure protocol
@@ -370,7 +413,10 @@ async def run_scale_handshake(
         except Exception as exc:
             log("info", message=f"Disconnect write ended the link: {exc}")
         return
-    log("info", message="Handshake sent. Step on the scale barefoot. Listening for weight.")
+    log(
+        "info",
+        message="Handshake sent. Step on the scale barefoot. Listening for weight.",
+    )
     await sleep(listen_seconds)
     try:
         await _send(write, disconnect_frame(), "disconnect", log)
@@ -390,7 +436,11 @@ def _profile_record(age: int, height_cm: int, sex: str) -> dict[str, Any]:
     return {"age": age, "height_cm": height_cm, "sex": sex.strip().lower()}
 
 
-def _user_info(user_number: int, profile: tuple[int, int, str] | None, saved: dict[str, Any] | None = None) -> bytes:
+def _user_info(
+    user_number: int,
+    profile: tuple[int, int, str] | None,
+    saved: dict[str, Any] | None = None,
+) -> bytes:
     if profile is None:
         return user_info_fallback(user_number)
     age, height_cm, sex = profile
@@ -405,8 +455,24 @@ def _user_info(user_number: int, profile: tuple[int, int, str] | None, saved: di
     )
 
 
-async def _pair(*, write, queue, store, device_key, saved, password, user_number, user_name, profile, log) -> bool:
-    broadcast = hex_decode(saved["broadcast_id"]) if saved.get("broadcast_id") else new_broadcast_id()
+async def _pair(
+    *,
+    write,
+    queue,
+    store,
+    device_key,
+    saved,
+    password,
+    user_number,
+    user_name,
+    profile,
+    log,
+) -> bool:
+    broadcast = (
+        hex_decode(saved["broadcast_id"])
+        if saved.get("broadcast_id")
+        else new_broadcast_id()
+    )
     record = {
         **saved,
         "password": hex_encode(password),
@@ -420,7 +486,10 @@ async def _pair(*, write, queue, store, device_key, saved, password, user_number
     await _send(write, broadcast_frame(broadcast), "broadcast id", log)
     random_packet = await _take(queue, 0xA1, 10)
     if random_packet is None:
-        log("info", message="Pairing stopped: no random indication after the broadcast id.")
+        log(
+            "info",
+            message="Pairing stopped: no random indication after the broadcast id.",
+        )
         return False
     random_bytes = random_packet[1:5]
     await _send(write, xor_frame(password, random_bytes), "xor", log)
@@ -430,14 +499,19 @@ async def _pair(*, write, queue, store, device_key, saved, password, user_number
     # for a user number that is in that list.
     slots = await _user_list(queue, log)
     if slots and user_number not in slots:
-        log("info", message=f"User {user_number} is not in the scale's slot list {sorted(slots)}. Bind not sent.")
+        log(
+            "info",
+            message=f"User {user_number} is not in the scale's slot list {sorted(slots)}. Bind not sent.",
+        )
         return False
     await _send(write, bind_user_frame(user_number, user_name), "bind user", log)
     await _send(write, _user_info(user_number, profile, saved), "user info", log)
     await _send(write, utc_frame(), "utc", log)
     log(
         "info",
-        message=(f"Saved password and broadcast id for {device_key} in the local store."),
+        message=(
+            f"Saved password and broadcast id for {device_key} in the local store."
+        ),
     )
     return True
 
@@ -454,7 +528,9 @@ def user_slot(packet: bytes) -> tuple[int, str] | None:
     return packet[1], name
 
 
-async def _user_list(queue: asyncio.Queue[bytes], log, quiet: float = 3.0) -> dict[int, str]:
+async def _user_list(
+    queue: asyncio.Queue[bytes], log, quiet: float = 3.0
+) -> dict[int, str]:
     """Collect ``0x83`` slots until all of them arrived or the scale goes quiet."""
     slots: dict[int, str] = {}
     while len(slots) < MAX_USERS:
@@ -466,14 +542,27 @@ async def _user_list(queue: asyncio.Queue[bytes], log, quiet: float = 3.0) -> di
         if slot is not None:
             slots[slot[0]] = slot[1]
     if slots:
-        rendered = ", ".join(f"{number}:{name or '-'}" for number, name in sorted(slots.items()))
+        rendered = ", ".join(
+            f"{number}:{name or '-'}" for number, name in sorted(slots.items())
+        )
         log("info", message=f"Scale user slots: {rendered}")
     else:
         log("info", message="No 0x83 user list after the XOR. Binding anyway.")
     return slots
 
 
-async def _sync(*, write, queue, random_bytes, password, broadcast_id, user_number, profile, log, saved=None) -> None:
+async def _sync(
+    *,
+    write,
+    queue,
+    random_bytes,
+    password,
+    broadcast_id,
+    user_number,
+    profile,
+    log,
+    saved=None,
+) -> None:
     """Sync as PHS Health does it on the wire (Pixel HCI capture, 2026-10-13).
 
     XOR, broadcast id (``OPERATING_WRITE_BROADCAST_ID_ON_SYNC``), UTC. A scale
@@ -488,11 +577,16 @@ async def _sync(*, write, queue, random_bytes, password, broadcast_id, user_numb
     await _send(write, utc_frame(), "utc", log)
     reply = await _take(queue, 0xC0, USER_INFO_WAIT_SECONDS)
     if reply is None:
-        log("info", message="No 0xC0 user info after the UTC. The scale did not recognise this broadcast id.")
+        log(
+            "info",
+            message="No 0xC0 user info after the UTC. The scale did not recognise this broadcast id.",
+        )
     else:
         log("info", message=f"Scale recognised the user: {reply[:7].hex(' ')}")
         if profile is not None:
-            await _send(write, _user_info(user_number, profile, saved), "user info", log)
+            await _send(
+                write, _user_info(user_number, profile, saved), "user info", log
+            )
 
 
 async def _send(write, payload: bytes, label: str, log) -> None:

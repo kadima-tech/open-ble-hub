@@ -33,4 +33,6 @@ def interpret(kind: str, data: bytes) -> dict:
 def _add_le(body: dict, data: bytes) -> None:
     if len(data) in (1, 2, 4):
         body["unsigned_little_endian"] = int.from_bytes(data, "little")
-        body["endian_note"] = "Little-endian display of these bytes. The manual does not record the endianness."
+        body["endian_note"] = (
+            "Little-endian display of these bytes. The manual does not record the endianness."
+        )

@@ -39,7 +39,9 @@ def age_on(birth: date, when: date) -> int:
     return years
 
 
-def jebb2000_fat_pct(*, male: bool, age: int, height_cm: float, weight_kg: float, impedance: float) -> float:
+def jebb2000_fat_pct(
+    *, male: bool, age: int, height_cm: float, weight_kg: float, impedance: float
+) -> float:
     height_m = height_cm / 100.0
     fat = (
         -156.1
@@ -53,12 +55,26 @@ def jebb2000_fat_pct(*, male: bool, age: int, height_cm: float, weight_kg: float
     return fat
 
 
-def composition(*, male: bool, birth: date, height_cm: float, weight_kg: float, impedance: float | None, when: date) -> Composition | None:
+def composition(
+    *,
+    male: bool,
+    birth: date,
+    height_cm: float,
+    weight_kg: float,
+    impedance: float | None,
+    when: date,
+) -> Composition | None:
     """Return body composition, or None when there is no usable impedance."""
     if not impedance or impedance <= 0 or weight_kg <= 0 or height_cm <= 0:
         return None
     age = age_on(birth, when)
-    fat_pct = jebb2000_fat_pct(male=male, age=age, height_cm=height_cm, weight_kg=weight_kg, impedance=impedance)
+    fat_pct = jebb2000_fat_pct(
+        male=male,
+        age=age,
+        height_cm=height_cm,
+        weight_kg=weight_kg,
+        impedance=impedance,
+    )
     fat_pct = min(MAX_FAT_PCT, max(MIN_FAT_PCT, fat_pct))
     fat_kg = weight_kg * fat_pct / 100.0
     bmi = weight_kg / (height_cm / 100.0) ** 2

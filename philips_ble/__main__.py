@@ -1,5 +1,7 @@
 """Command line for the local Mac BLE client.
 
+Examples::
+
     python -m philips_ble scan
     python -m philips_ble brush
     python -m philips_ble scale
@@ -27,17 +29,34 @@ def _build() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     scan = sub.add_parser("scan", help="List scale and Sonicare advertisements")
-    scan.add_argument("--seconds", type=float, default=8, help="How long to listen (default 8)")
-    scan.add_argument("--all", action="store_true", help="Also list advertisements that do not match")
+    scan.add_argument(
+        "--seconds", type=float, default=8, help="How long to listen (default 8)"
+    )
+    scan.add_argument(
+        "--all", action="store_true", help="Also list advertisements that do not match"
+    )
 
     for name, default_seconds, help_text in (
         ("brush", 25, "Read and subscribe to the Sonicare handle"),
         ("scale", 60, "Read identity and listen for scale measurements"),
     ):
         command = sub.add_parser(name, help=help_text)
-        command.add_argument("--address", help="Device address from a previous scan. On macOS this is a UUID.")
-        command.add_argument("--seconds", type=float, default=default_seconds, help=f"How long to listen after subscribing (default {default_seconds})")
-        command.add_argument("--scan-seconds", type=float, default=8, help="How long to look for the device first (default 8)")
+        command.add_argument(
+            "--address",
+            help="Device address from a previous scan. On macOS this is a UUID.",
+        )
+        command.add_argument(
+            "--seconds",
+            type=float,
+            default=default_seconds,
+            help=f"How long to listen after subscribing (default {default_seconds})",
+        )
+        command.add_argument(
+            "--scan-seconds",
+            type=float,
+            default=8,
+            help="How long to look for the device first (default 8)",
+        )
         command.add_argument("--out", type=Path, help="Append JSON lines to this file")
         if name == "scale":
             command.add_argument(
@@ -46,22 +65,54 @@ def _build() -> argparse.ArgumentParser:
                 default=Path(".philips-scale.json"),
                 help="Where to keep the scale password and broadcast id (default .philips-scale.json)",
             )
-            command.add_argument("--user-number", type=int, default=DEFAULT_USER_NUMBER, help="User slot written during a new pair (default 1)")
-            command.add_argument("--user-name", default=DEFAULT_USER_NAME, help="User name written during a new pair (default User)")
-            command.add_argument("--password", help="8 hex digits from a previous pair, if this Mac does not have the store yet")
-            command.add_argument("--age", type=int, help="Age in years, sent with --height-cm and --sex")
-            command.add_argument("--height-cm", type=int, help="Height in centimetres (100..204)")
-            command.add_argument("--sex", choices=("male", "female"), help="male or female")
+            command.add_argument(
+                "--user-number",
+                type=int,
+                default=DEFAULT_USER_NUMBER,
+                help="User slot written during a new pair (default 1)",
+            )
+            command.add_argument(
+                "--user-name",
+                default=DEFAULT_USER_NAME,
+                help="User name written during a new pair (default User)",
+            )
+            command.add_argument(
+                "--password",
+                help="8 hex digits from a previous pair, if this Mac does not have the store yet",
+            )
+            command.add_argument(
+                "--age", type=int, help="Age in years, sent with --height-cm and --sex"
+            )
+            command.add_argument(
+                "--height-cm", type=int, help="Height in centimetres (100..204)"
+            )
+            command.add_argument(
+                "--sex", choices=("male", "female"), help="male or female"
+            )
 
-    watch = sub.add_parser("watch", help="Keep scanning and connect as soon as the scale advertises")
+    watch = sub.add_parser(
+        "watch", help="Keep scanning and connect as soon as the scale advertises"
+    )
     watch.add_argument("--address", help="Only this scale. On macOS this is a UUID.")
     watch.add_argument("--out", type=Path, help="Append JSON lines to this file")
-    watch.add_argument("--idle-seconds", type=float, default=180, help="How long to hold the link after the last indication (default 180)")
-    watch.add_argument("--store", type=Path, default=Path(".philips-scale.json"), help="Password and broadcast id store")
+    watch.add_argument(
+        "--idle-seconds",
+        type=float,
+        default=180,
+        help="How long to hold the link after the last indication (default 180)",
+    )
+    watch.add_argument(
+        "--store",
+        type=Path,
+        default=Path(".philips-scale.json"),
+        help="Password and broadcast id store",
+    )
     watch.add_argument("--user-number", type=int, default=DEFAULT_USER_NUMBER)
     watch.add_argument("--user-name", default=DEFAULT_USER_NAME)
     watch.add_argument("--password", help="8 hex digits from a previous pair")
-    watch.add_argument("--age", type=int, help="Age in years, sent with --height-cm and --sex")
+    watch.add_argument(
+        "--age", type=int, help="Age in years, sent with --height-cm and --sex"
+    )
     watch.add_argument("--height-cm", type=int)
     watch.add_argument("--sex", choices=("male", "female"))
     return parser
