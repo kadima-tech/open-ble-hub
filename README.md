@@ -85,6 +85,8 @@ Not ready to write code? Open an issue with the device model, what it measures a
 | `deploy/` | Raspberry Pi install script and systemd unit |
 | `tests/` | Unit tests, built from captured packets |
 | `DESIGN.md` | The web app's design language |
+| `CONTRIBUTING.md` | Development setup, tests and pull requests |
+| `LICENSE` | MIT License |
 
 ## Low-level client
 
@@ -101,3 +103,11 @@ python -m philips_ble brush    # read the Sonicare toothbrush (unsupported, hex 
 `scale` and `watch` answer the Lifesense A3 exchange. A paired scale sends a random (`0xA1`) and expects the password from the original pair; a scale in pairing mode (hold the unit button for 3 seconds) sends `0xA0`. The client stores the password and broadcast id in `.philips-scale.json`. On each connection it answers with that password, writes the broadcast id and the clock, waits for the scale's `0xC0`, then writes the profile and `0x22`. The scale then sends the weigh on `8A24` and `8A22`. Details and what worked on a live scale are in [docs/dl8780-connection-handoff.md](docs/dl8780-connection-handoff.md).
 
 Options: `--address` picks a device when several are in range (on macOS this is a UUID from `scan`); `--out readings.jsonl` logs every read and notification; `--seconds` sets how long to listen; `--user-number`, `--user-name`, `--age`, `--height-cm` and `--sex` fill the scale's user slot on a new pair. `make scan`, `make scale` and `make watch` run the same commands with options in `ARGS`, for example `make watch ARGS="--out readings.jsonl"`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, tests and pull requests. Report security issues privately, as that file describes.
+
+## License
+
+Open BLE Hub is released under the [MIT License](LICENSE), copyright 2026 Kadima Tech. The Instrument Sans font in `ble_hub/static/fonts/` remains under the SIL Open Font License (`OFL.txt` next to the font).
