@@ -216,12 +216,12 @@ The prefix, then raw bytes, then `;`, padded with `0xFF` to exactly one 20-byte 
 A toy may send, unprompted, a 20-character notification `$01` + 16 hex digits + `;`. The app answers 200 ms later with a write-without-response (`s7.b`, `r9.a.f`):
 
 ```python
-def qcode_reply(s: str) -> str:            # s == "$01" + 16 hex + ";"
-    a, b, c, d = (int(s[i:i+2], 16) for i in (3, 5, 7, 9))
-    rest = s[11:]                         # 8 hex digits + ";"
-    sb = lambda x: x - 256 if x > 127 else x            # Java signed byte
+def qcode_reply(s: str) -> str:  # s == "$01" + 16 hex + ";"
+    a, b, c, d = (int(s[i : i + 2], 16) for i in (3, 5, 7, 9))
+    rest = s[11:]  # 8 hex digits + ";"
+    sb = lambda x: x - 256 if x > 127 else x  # Java signed byte
     k = sb((c ^ sb((c * d) & 0xFF) ^ sb((c + d) & 0xFF) ^ d) & 0xFF)
-    jhex = lambda x: format(x & 0xFFFFFFFF, "x")       # Integer.toHexString
+    jhex = lambda x: format(x & 0xFFFFFFFF, "x")  # Integer.toHexString
     return ("$01" + jhex(sb(a) ^ k) + jhex(sb(b) ^ k) + "0000" + rest).upper()
 ```
 
@@ -404,9 +404,12 @@ A minimal client only has to scan, connect, subscribe, send `DeviceType;`, then 
 ```python
 SUFFIX = "-bbd5-a6920e4c5653"
 
+
 def is_lovense(adv):
-    return any(str(u).lower().endswith(SUFFIX) for u in adv.uuids_both_byte_orders()) \
-        or (adv.name or "").lower().startswith("lvs")
+    return any(
+        str(u).lower().endswith(SUFFIX) for u in adv.uuids_both_byte_orders()
+    ) or (adv.name or "").lower().startswith("lvs")
+
 
 async def connect(dev):
     gatt = await dev.connect(transport="le", timeout=10)
@@ -416,15 +419,16 @@ async def connect(dev):
         tx = find(chars, "42450002-0023-4bd4-bbd5-a6920e4c5653")
         rx = [find(chars, "42450003-0023-4bd4-bbd5-a6920e4c5653")]
     else:
-        tx = [c for c in chars if c.props & WRITE][-1]          # last writable
+        tx = [c for c in chars if c.props & WRITE][-1]  # last writable
         rx = [c for c in chars if c.props & NOTIFY]
     for c in rx:
-        await gatt.start_notify(c, on_notify)                   # CCCD 0x2902 = 01 00
-    await send(tx, "DeviceType;")                               # expect "<code>:<fw>:<mac>;" within 10 s
+        await gatt.start_notify(c, on_notify)  # CCCD 0x2902 = 01 00
+    await send(tx, "DeviceType;")  # expect "<code>:<fw>:<mac>;" within 10 s
+
 
 def on_notify(data: bytes):
-    if data[:1] == b"\xAA":
-        handle_aa(data)                                         # check crc8(data[:-1]) == data[-1]
+    if data[:1] == b"\xaa":
+        handle_aa(data)  # check crc8(data[:-1]) == data[-1]
     else:
         text = data.decode("utf-8", "replace")
         if text.startswith("$01") and text.endswith(";") and len(text) == 20:
@@ -432,8 +436,11 @@ def on_notify(data: bytes):
         else:
             handle_text(text)
 
+
 async def send(tx, cmd: str):
-    await gatt.write(tx, cmd.encode(), response=False)          # app default for normal commands
+    await gatt.write(
+        tx, cmd.encode(), response=False
+    )  # app default for normal commands
 ```
 
 ### Timing and flow control (app behaviour worth copying)
