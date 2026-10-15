@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openble-lovense"
+version = "0.1.0"
+description = "Lovense toy BLE protocol: identity UUID, text commands, 0xAA frames and a paced command link, without a Bluetooth stack."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Kadima Tech" }]
+keywords = ["bluetooth", "ble", "lovense"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Home Automation",
+    "Topic :: System :: Hardware",
+]
+dependencies = []
+
+[project.urls]
+Source = "https://github.com/kadima-tech/open-ble-hub/tree/main/packages/openble-lovense"
+Issues = "https://github.com/kadima-tech/open-ble-hub/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openble"]

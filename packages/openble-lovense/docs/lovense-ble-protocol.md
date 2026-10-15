@@ -1,8 +1,8 @@
 # Lovense BLE protocol
 
-Static protocol notes for Lovense toys, read from the Lovense Remote Android app. There is no `openble-lovense` library yet; when one is added, this manual moves to its `docs/` folder.
+Static protocol notes for Lovense toys, read from the Lovense Remote Android app. The `openble-lovense` library in this package implements them.
 
-This is interoperability documentation of a local app binary. It is not a capture from a live toy.
+This is interoperability documentation of a local app binary. One live toy has since been checked against it; see [Live check](#live-check). Everything else is still static.
 
 ## Overview
 
@@ -22,6 +22,41 @@ Lovense toys are plain BLE GATT peripherals that take ASCII text commands such a
 
 **Scope.** This manual targets interoperability: talking to toys you own from an open-source client. It does not cover the Lovense cloud, accounts, Wi-Fi provisioning or firmware updates, except where those share the BLE link.
 
+### Live check
+
+On 2026-10-15 the `openble-lovense` library drove a Lovense Max (advertised name `LVS-Max223`, no PIN) over bleak on macOS, with no Lovense app running. Raw writes and notifications:
+
+| Step | Sent | Received |
+| --- | --- | --- |
+| Advertisement | — | One 128-bit service UUID, `42300001-0023-4bd4-bbd5-a6920e4c5653`, in standard byte order. No manufacturer data |
+| GATT | — | One service, `42300001-…`. `42300002-…` has `write` and `write-without-response`. `42300003-…` has `notify` |
+| DeviceType | `DeviceType;` | `B:223:D6111451517F;` within 0.07 s |
+| Battery | `Battery;` | `78;` |
+| GetCap | `GetCap;` | `CAP:` `1E 00 00 00 02` `vp;`: feedback, long commands, PIN and rename bits; two channels, vibrate and air pump |
+| Vibrate | `Vibrate:3;` (write without response) | `OK;`, and the toy vibrated |
+| Stop | `Vibrate:0;`, `Air:Level:0;` | `OK;` after each |
+| Tagged | `Battery,\x05;`, `Battery,A;` | `78,\x05;`, `78,A;` |
+| Batch | `GetBatch,gb;` | `240925,gb;` |
+| Device info | `DeviceInfo;` | `info:B:2:1;` |
+| Unknown text | `NoSuchCmd;` | `unkown,NoSuchCmd;` |
+| AA frame | `AA 8B 00 70` (read pattern status) | Text `unkown,` `AA 8B`, not an AA frame |
+| Mply | `Mply:3:-1;`, `Mply:0:0;` | `unkown,Mply:3:-1;`, `unkown,Mply:0:0;` |
+| LVS | `LVS:` `03 00` `;` + `FF` padding, then `00 00` | `OK;` after each, and the toy vibrated |
+
+What that changes in this manual:
+
+- The identity UUID's `VVVV` group is not the firmware. The Max advertised `0023` (35) and reported firmware 223 in `DeviceType;`. The pinned `be` UUID also carries `0023`, so it may be a constant. Use `DeviceType;` for the firmware.
+- The advertised name is not `LVS-<code><version>`: it was `LVS-Max223`.
+- The 128-bit UUID arrived in standard byte order, so a standard decoder (bleak, CoreBluetooth) matches it directly.
+- The property rule and the `…0001` service, `…0002` TX, `…0003` RX layout both held for model `b`.
+- Motion commands get an untagged `OK;` reply. The manual's static reading did not show one.
+- The `DeviceType;` model code arrives upper case (`B`). The app lower-cases it.
+- No `$01` QCode challenge arrived, including in 15 s of listening with nothing sent.
+- The toy echoes a `,<tag>` byte unchanged and accepts any tag value tried (`0x05`, `A`).
+- This Max rejects `Mply:` and accepts `LVS:`, so a client should try `LVS:` first, as the app does, and fall back on `unkown,`.
+- `GetCap` sets bit 2 ("long commands"), yet the toy read the `0xAA` frame as text. Bit 2 alone does not mean AA frames work; the app also checks the server config `supportLanPattern`.
+- An unknown command is echoed whole, `;` included. The echo of the AA frame stopped at its `00` byte.
+
 ## Discovery and advertising
 
 A scan result counts as a Lovense toy if its advertisement carries a 128-bit service UUID ending in `-BBD5-A6920E4C5653`, or failing that, if its name starts with `lvs` (case-insensitive). Names starting `dfu` or `new` are toys in bootloader/update mode. Observed in `com.component.dxtoy.core.bluetooth.dx.c` (ToyBtDXManager) and `r9.b` (UuidDeviceUtils).
@@ -40,9 +75,9 @@ XX YY 00 PP - VVVV - 4BD4 - BBD5 - A6920E4C5653
 ```
 
 - Model code = `chr(XX)` + (`chr(YY)` unless it is `'0'`). Example: `42450001-0023-…` → `BE`, version 35, no PIN.
-- Firmware version = `int(VVVV, 16)` (chars 9–13 of the UUID string). The app prefers a version learned from the toy if it has one.
+- Firmware version = `int(VVVV, 16)` (chars 9–13 of the UUID string) in the app. The app prefers a version learned from the toy if it has one. Live, a Max on firmware 223 advertised `0023`, so this group is not the firmware (see Live check).
 - PIN flag: `r9.b.c()` treats a first group ending `11` as "PIN set". The app uses that to show the lock icon and start the PIN flow.
-- From these the app builds a display name `LVS-<code><version>` and a device-type string `<code>:<version>:<MAC without colons>;`. The second is the same shape the toy returns for `DeviceType;`.
+- From these the app builds a display name `LVS-<code><version>` (the Max advertised `LVS-Max223` instead) and a device-type string `<code>:<version>:<MAC without colons>;`. The second is the same shape the toy returns for `DeviceType;`.
 
 ### Parsing the advertisement
 
@@ -54,7 +89,7 @@ XX YY 00 PP - VVVV - 4BD4 - BBD5 - A6920E4C5653
 | `0x06`, `0x07` (128-bit UUID lists) | Each 16 bytes read as two **little-endian 64-bit words**, the first taken as the most-significant half |
 | anything else | skipped |
 
-Inferred: that 128-bit decode is not the standard full 16-byte reversal. Either toys put the two halves on air in that order, or the parse only works for some firmware and the `LVS-` name fallback covers the rest. A client should try both byte orders and accept whichever one ends in `BBD5-A6920E4C5653`.
+Inferred: that 128-bit decode is not the standard full 16-byte reversal. Either toys put the two halves on air in that order, or the parse only works for some firmware and the `LVS-` name fallback covers the rest. A client should try both byte orders and accept whichever one ends in `BBD5-A6920E4C5653`. Live, a Max sent it in standard order.
 
 ### Other advertised services
 
@@ -165,7 +200,7 @@ The link carries three wire formats on the same TX characteristic. A client tell
 - UTF-8/ASCII, colon-separated arguments, always ending in `;`. No length prefix, checksum or encryption.
 - One command per GATT write. No MTU is negotiated, so keep a command within 20 bytes. The app does no chunking.
 - Replies are notifications in the same style, for example `85;` or `s:35:0082059AD3BD;`. Reply tags: for non-motion ("NORMAL") commands the app inserts `,<tag>` before the final `;`. The tag is either one raw byte that cycles 1…127 per toy, skipping `0x00`, `\n`, space, `,`, `:` and `;`, or a fixed string such as `gb` in `GetBatch,gb;`. No tag is added if the result would exceed 20 bytes, or to motion commands. The app strips a matching tag from replies (`y9.h`). Inferred: the firmware echoes the tag. Untagged commands work, since the app itself sends `DeviceType;` and `Battery;` without one.
-- Unknown commands come back as `unkown,<Cmd>` (typo as in the code, seen for `GetCap`).
+- Unknown commands come back as `unkown,<Cmd>` (typo as in the code, seen for `GetCap`). Live, the whole command is echoed, `;` included: `unkown,NoSuchCmd;`.
 
 ### 2. AA binary frames (newer toys, selected features)
 
@@ -238,8 +273,8 @@ Motion commands take a level from 0 (stop) to 20 unless stated. The app refuses 
 | `DeviceType;` | — | `<code>:<fw>:<MAC12>;` | Identity. See Connection lifecycle |
 | `Battery;` | — | `<percent>;` e.g. `85;`; sometimes `s<n>;` | Meaning of the `s` form is unknown |
 | `GetCap;` | — | Binary, see below; `unkown,GetCap` if unsupported | Newer firmware only |
-| `GetBatch,gb;` | — | `<batch>,gb;` | Production batch string |
-| `DeviceInfo;` | — | `info:<a>:<b>:…;` |  |
+| `GetBatch,gb;` | — | `<batch>,gb;` | Production batch string. Live: `240925,gb;`, which reads like a date (inferred) |
+| `DeviceInfo;` | — | `info:<a>:<b>:…;` | Live: `info:B:2:1;` on a Max |
 | `GetParts;` | — | `Parts:<n>;` | Only some models |
 | `PowerOff;` | — | `POWEROFF…` | Turns the toy off |
 | `CN:<name>;` | 1–12 chars `[0-9A-Za-z_ ]`; must not contain `dfu`, `new`, `lvs` | `OK…,cn;` | Rename the BLE name |
@@ -257,7 +292,7 @@ Motion commands take a level from 0 (stop) to 20 unless stated. The app refuses 
 
 ### Motion control
 
-These are sent untagged and without response, with the queue's dedup applied (see Implementation notes). Send level 0 to stop.
+These are sent untagged and without response, with the queue's dedup applied (see Implementation notes). Send level 0 to stop. Live, a Max answered each one with `OK;`.
 
 | Command | Range | Function letter | Notes |
 | --- | --- | --- | --- |
@@ -285,7 +320,7 @@ These are sent untagged and without response, with the queue's dedup applied (se
 
 ### Combined (multi-channel) commands
 
-The app tries these in order: `LVS:`, then `Mply:`, then `Multiply:`, then single commands (`f9.a`). Which ones a toy takes comes from `GetCap` (LVS) or the server config (`supportMultiply`).
+The app tries these in order: `LVS:`, then `Mply:`, then `Multiply:`, then single commands (`f9.a`). Which ones a toy takes comes from `GetCap` (LVS) or the server config (`supportMultiply`). Live, a Max (firmware 223) answered `unkown,Mply:…;` and accepted `LVS:` with `OK;`, vibrating as asked.
 
 | Command | Format | Notes |
 | --- | --- | --- |
@@ -335,7 +370,7 @@ Not present in this build: `Status:`, `Sync`, `Function:`, `Name:`, `Test`, or I
 | `0x8E` | PATTERN\_PROGRAM\_CONTROL | both | `op [, arg]`: 1 free space, 2 revert, 3 play, 4 pause, 5 continue, 6 stop, 7 get pattern IDs, 8 delete |
 | `0x93` | Wi-Fi management | both | `sub`: 0 status, 1 challenge, 5 device ID, 7 switch state, 8 MQTT status work without auth. 2 list slots, 3 switch slot, 4 delete slot, 6 enable Wi-Fi need a server-signed token |
 
-Source: IDs in `r6.f`; builders in `n6.b`, `o6.b`, `p6.f`, `business/longc/aalightrgb/a.java`; parsers in `t6.a`, `p6.c`, `solacepro/pattern/b.java`, `hq.d`. AA support is gated by `GetCap` bit 2 or the server config `supportLanPattern`.
+Source: IDs in `r6.f`; builders in `n6.b`, `o6.b`, `p6.f`, `business/longc/aalightrgb/a.java`; parsers in `t6.a`, `p6.c`, `solacepro/pattern/b.java`, `hq.d`. AA support is gated by `GetCap` bit 2 or the server config `supportLanPattern`. Live, a Max with bit 2 set answered `AA 8B 00 70` with the text `unkown,` `AA 8B`, so bit 2 alone is not enough.
 
 ## Device catalogue
 
@@ -463,9 +498,11 @@ The toy needs no keepalive. Motion levels persist until changed, so a client sho
 These need a capture from real hardware or more static work:
 
 - [ ] Does firmware reject writes on an unencrypted link when the PIN is on?
-- [ ] What happens if a QCode challenge goes unanswered, and does a zero-padded reply work?
-- [ ] On air, are the 128-bit identity UUID halves swapped, as the app's parser assumes?
-- [ ] Does firmware echo the `,<tag>` byte, and does it accept any tag value?
+- [ ] What happens if a QCode challenge goes unanswered, and does a zero-padded reply work? A Max (firmware 223) sent none in 15 s.
+- [x] On air, are the 128-bit identity UUID halves swapped, as the app's parser assumes? Not on a Max (firmware 223): standard order.
+- [ ] What is the identity UUID's `VVVV` group, if not the firmware?
+- [x] Does firmware echo the `,<tag>` byte, and does it accept any tag value? Yes on a Max (firmware 223): `Battery,\x05;` → `78,\x05;`, `Battery,A;` → `78,A;`.
+- [ ] Which toys take AA frames? A Max with `GetCap` bit 2 set did not.
 - [ ] How are payloads over 20 bytes (`Pl…` patterns, large AA frames) carried with no MTU request?
 - [ ] What do the `s<n>;` battery reply and `GetCap` bytes 5–7 mean?
 - [ ] Time units of the `A*` timed commands and `AirLoop`.
