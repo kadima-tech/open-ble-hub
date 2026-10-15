@@ -28,6 +28,8 @@ One library per device protocol, published to PyPI under the `openble` namespace
 pip install openble-lifesense
 ```
 
+Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Lovense toys](docs/lovense-ble-protocol.md).
+
 ## Front-ends
 
 Apps in this repository, each using a selection of the libraries. They are not published.
@@ -98,6 +100,7 @@ git push origin openble-lifesense-v0.1.0
 | `packages/` | The libraries, one per device protocol, each with its tests and protocol notes |
 | `apps/bathroom-hub/` | The Bathroom Hub: listener, assignment, body composition, Google Health client, SQLite storage, web app, and the Raspberry Pi installer in `deploy/` |
 | `apps/ble-probe/` | The diagnostic CLI |
+| `docs/` | Protocol manuals for devices that have no library yet |
 | `tests/` | Bluetooth tests that drive both apps against bleak's real API, with no radio |
 | `DESIGN.md` | The web app's design language |
 | `CONTRIBUTING.md` | Development setup, tests and pull requests |
