@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openble-lifesense"
+version = "0.1.0"
+description = "Lifesense A2/A3 weight-scale protocol (Philips DL8780): packet parsers and the pair and sync handshake, without a Bluetooth stack."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT-0"
+license-files = ["LICENSE"]
+authors = [{ name = "Kadima Tech" }]
+keywords = ["bluetooth", "ble", "lifesense", "philips", "scale", "weight"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Home Automation",
+    "Topic :: System :: Hardware",
+]
+dependencies = []
+
+[project.urls]
+Source = "https://github.com/kadima-tech/open-ble-hub/tree/main/packages/openble-lifesense"
+Issues = "https://github.com/kadima-tech/open-ble-hub/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openble"]

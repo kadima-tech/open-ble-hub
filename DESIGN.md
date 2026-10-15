@@ -1,6 +1,6 @@
 # Design
 
-The design language of the Open BLE Hub web UI (`ble_hub/web.py`, `ble_hub/static/app.css`, `ble_hub/static/app.js`), called **Mineral**. It was chosen from the "Flow Directions" design explorations (onboarding → dashboard → device hub).
+The design language of the Bathroom Hub web UI (`apps/bathroom-hub/src/bathroom_hub/web.py`, `static/app.css`, `static/app.js`), called **Mineral**. It is the only UI in the repository; a new hub under `apps/` starts from these tokens and components. It was chosen from the "Flow Directions" design explorations (onboarding → dashboard → device hub).
 
 ## Character
 
@@ -57,7 +57,7 @@ Person avatars use a fixed five-colour palette (`.av-0`…`.av-4`, by profile id
 - **Chips:** filter links; the selected chip is filled with `--text`.
 - **Forms:** labels above inputs, 52px fields, units inside the field on the right (`.with-unit`), errors in one block at the top.
 - **Numbered steps:** `.numbered` with round counters; `.is-done` shows a check on the accent, `.is-now` a warn ring.
-- **Charts:** server-rendered SVG (`ble_hub/charts.py`): one line with a 9% area, three grid lines, a dot on the latest value, min and max to the right, start date and "Today" beneath. Sparklines on the small cards.
+- **Charts:** server-rendered SVG (`bathroom_hub/charts.py`): one line with a 9% area, three grid lines, a dot on the latest value, min and max to the right, start date and "Today" beneath. Sparklines on the small cards.
 
 ## Interaction
 

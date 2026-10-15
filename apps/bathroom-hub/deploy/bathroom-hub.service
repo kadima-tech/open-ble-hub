@@ -1,0 +1,21 @@
+[Unit]
+Description=Bathroom Hub (Bluetooth health devices to Google Health)
+After=bluetooth.service network-online.target
+Wants=bluetooth.service network-online.target
+
+[Service]
+User=bathroom-hub
+Group=bathroom-hub
+SupplementaryGroups=bluetooth
+WorkingDirectory=/var/lib/bathroom-hub
+ExecStart=/opt/bathroom-hub/.venv/bin/bathroom-hub --data-dir /var/lib/bathroom-hub --port 8080
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/bathroom-hub
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

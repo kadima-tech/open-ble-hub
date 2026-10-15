@@ -13,9 +13,9 @@ quote-style = "preserve"
 # Exception around notify teardown and handshake steps so one bad packet or
 # a dropped adapter does not kill the process. Narrowing those handlers
 # would change behaviour.
-"ble_hub/listener.py" = ["BLE001"]
-"philips_ble/scale_link.py" = ["BLE001"]
-"philips_ble/session.py" = ["BLE001", "S110"]
+"apps/bathroom-hub/src/bathroom_hub/listener.py" = ["BLE001"]
+"packages/openble-lifesense/src/openble/lifesense/link.py" = ["BLE001"]
+"apps/ble-probe/src/ble_probe/session.py" = ["BLE001", "S110"]
 
 [lint.isort]
-known-first-party = ["ble_hub", "philips_ble"]
+known-first-party = ["bathroom_hub", "ble_probe", "openble"]

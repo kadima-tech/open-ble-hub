@@ -1,0 +1,68 @@
+# Publish one library to PyPI. Tag it as <distribution>-v<version>, for example
+#   git tag openble-lifesense-v0.1.0 && git push origin openble-lifesense-v0.1.0
+# The version in the tag has to match packages/<distribution>/pyproject.toml.
+# PyPI trusted publishing: each project needs a publisher for this repository,
+# workflow publish.yml and environment pypi.
+name: Publish
+
+on:
+  push:
+    tags: ["openble-*-v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    outputs:
+      dist: ${{ steps.resolve.outputs.dist }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - name: Resolve the package from the tag
+        id: resolve
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          dist="${TAG%-v*}"
+          version="${TAG##*-v}"
+          dir="packages/$dist"
+          if [[ ! -f "$dir/pyproject.toml" ]]; then
+            echo "::error::No $dir/pyproject.toml for tag $TAG"
+            exit 1
+          fi
+          if ! grep -qx "version = \"$version\"" "$dir/pyproject.toml"; then
+            echo "::error::$dir/pyproject.toml is not at version $version"
+            exit 1
+          fi
+          echo "dist=$dist" >> "$GITHUB_OUTPUT"
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+      - name: Build
+        run: uv build --out-dir dist "${{ steps.resolve.outputs.dir }}"
+      - name: Test the wheel on the oldest and newest Python
+        run: |
+          for python in 3.11 3.14; do
+            uv venv --clear --python "$python" .venv-test
+            uv pip install --python .venv-test/bin/python dist/*.whl
+            .venv-test/bin/python -m unittest discover -s "${{ steps.resolve.outputs.dir }}/tests"
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    environment:
+      name: pypi
+      url: https://pypi.org/project/${{ needs.build.outputs.dist }}/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2

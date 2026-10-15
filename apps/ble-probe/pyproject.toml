@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ble-probe"
+version = "0.1.0"
+description = "Diagnostic client: scan, connect, read and subscribe to the devices the openble libraries cover."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT-0"
+license-files = ["LICENSE"]
+authors = [{ name = "Kadima Tech" }]
+# A development tool for this repository, not published.
+classifiers = ["Private :: Do Not Upload"]
+dependencies = [
+    "openble-lifesense>=0.1,<0.2",
+    "openble-sonicare>=0.1,<0.2",
+    "bleak>=3.0.2,<4",
+]
+
+[project.scripts]
+ble-probe = "ble_probe.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ble_probe"]

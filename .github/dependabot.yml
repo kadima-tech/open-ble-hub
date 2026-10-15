@@ -1,7 +1,11 @@
 version: 2
 updates:
   - package-ecosystem: pip
-    directory: /
+    # Runtime dependencies live in each app's pyproject.toml. The libraries
+    # have none.
+    directories:
+      - /apps/bathroom-hub
+      - /apps/ble-probe
     schedule:
       interval: weekly
       day: monday

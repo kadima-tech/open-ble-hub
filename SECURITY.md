@@ -22,7 +22,7 @@ Research that follows this policy will not be met with legal action.
 
 In scope:
 
-- The hub (`ble_hub/`), the Philips client (`philips_ble/`), and the Raspberry Pi installer (`deploy/`).
+- The libraries (`packages/`), the Bathroom Hub (`apps/bathroom-hub/`) with its Raspberry Pi installer (`apps/bathroom-hub/deploy/`), and the BLE probe (`apps/ble-probe/`).
 - How the project stores and handles health measurements, the Google OAuth client secret, refresh and access tokens, and scale pairing secrets.
 - The local web app, when a bug would expose that data beyond the machine or the home network.
 

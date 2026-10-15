@@ -1,0 +1,5 @@
+# Every package in this repository, installed editable into .venv by `make`.
+-e packages/openble-lifesense
+-e packages/openble-sonicare
+-e apps/ble-probe
+-e apps/bathroom-hub
