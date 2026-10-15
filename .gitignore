@@ -6,3 +6,6 @@ readings.jsonl
 .philips-scale.json
 .philips-scale-*.json
 data/
+dist/
+build/
+*.egg-info/

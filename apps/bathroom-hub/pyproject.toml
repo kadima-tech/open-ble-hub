@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bathroom-hub"
+version = "0.1.0"
+description = "Raspberry Pi hub for bathroom devices: weighs from a Lifesense scale to Google Health."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Kadima Tech" }]
+# Deployed with deploy/install.sh, not published.
+classifiers = ["Private :: Do Not Upload"]
+dependencies = [
+    "openble-lifesense>=0.1,<0.2",
+    "aiohttp>=3.14.5",
+    "bleak>=3.0.2,<4",
+]
+
+[project.scripts]
+bathroom-hub = "bathroom_hub.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bathroom_hub"]

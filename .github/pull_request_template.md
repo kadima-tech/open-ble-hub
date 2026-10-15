@@ -12,4 +12,4 @@
 - [ ] `make lint` passes (ruff)
 - [ ] No databases, tokens, client secrets, pairing files, or `readings.jsonl`
 - [ ] Security impact considered (health data, Google credentials, pairing secrets, what the web app exposes)
-- [ ] Docs updated if setup, devices, or security behaviour changed (`README.md`, `docs/`, `SECURITY.md`)
+- [ ] Docs updated if setup, devices, or security behaviour changed (`README.md`, a library's `docs/`, `SECURITY.md`)

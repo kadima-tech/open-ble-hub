@@ -23,14 +23,14 @@ from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
 from bleak.backends.service import BleakGATTService, BleakGATTServiceCollection
 from bleak.exc import BleakError
 
-from ble_hub.db import Database
-from ble_hub.hub import Hub
-from ble_hub.listener import COMMAND_IN, COMMAND_OUT, ScaleListener
-from philips_ble.scale_link import ScaleStore
-from philips_ble.session import run_collect, run_scan, run_watch
-from philips_ble.uuids import sig
+from bathroom_hub.db import Database
+from bathroom_hub.hub import Hub
+from bathroom_hub.listener import COMMAND_IN, COMMAND_OUT, ScaleListener
+from ble_probe.session import run_collect, run_scan, run_watch
+from openble.lifesense.link import ScaleStore
+from openble.lifesense.uuids import sig
 
-# Captured from the DL8780 on 2026-10-13 (same bytes as test_ble_hub).
+# Captured from the DL8780 on 2026-10-13 (same bytes as test_bathroom_hub).
 WEIGHT_RAW = bytes.fromhex(
     "1f 16 26 00 fe 89 50 91 1f 00 00 00 00 17 13 00 ff 01 19 00"
 )
@@ -333,7 +333,7 @@ class ListenerBluetoothTests(unittest.TestCase):
         ]
 
         async def scenario():
-            with bluetooth("ble_hub.listener", radio):
+            with bluetooth("bathroom_hub.listener", radio):
                 return await self.listener._wait_for_scale()
 
         found = run(scenario())
@@ -377,7 +377,7 @@ class ListenerBluetoothTests(unittest.TestCase):
 
             loop.call_later = capture
             try:
-                with bluetooth("ble_hub.listener", radio):
+                with bluetooth("bathroom_hub.listener", radio):
                     await self.listener._session(device)
             finally:
                 for handle in handles:
@@ -425,7 +425,7 @@ class ListenerBluetoothTests(unittest.TestCase):
         device, _adv = scale_sighting("1DL87801")
 
         async def scenario():
-            with bluetooth("ble_hub.listener", radio):
+            with bluetooth("bathroom_hub.listener", radio):
                 await self.listener._session(device)
 
         run(scenario())
@@ -438,7 +438,7 @@ class ListenerBluetoothTests(unittest.TestCase):
         device, _adv = scale_sighting()
 
         async def scenario():
-            with bluetooth("ble_hub.listener", radio):
+            with bluetooth("bathroom_hub.listener", radio):
                 await self.listener._session(device)
 
         run(scenario())
@@ -450,7 +450,7 @@ class ListenerBluetoothTests(unittest.TestCase):
         radio = Radio()
         radio.fail_starts = 5
 
-        # ble_hub.listener.asyncio is the process-wide asyncio module.
+        # bathroom_hub.listener.asyncio is the process-wide asyncio module.
         # Save sleep before the patch so a zero delay still yields.
         original_sleep = asyncio.sleep
 
@@ -462,8 +462,8 @@ class ListenerBluetoothTests(unittest.TestCase):
 
         async def scenario():
             with (
-                bluetooth("ble_hub.listener", radio),
-                patch("ble_hub.listener.asyncio.sleep", park),
+                bluetooth("bathroom_hub.listener", radio),
+                patch("bathroom_hub.listener.asyncio.sleep", park),
             ):
                 task = asyncio.create_task(self.listener.run())
                 try:
@@ -508,7 +508,7 @@ class SessionBluetoothTests(unittest.TestCase):
         output = io.StringIO()
 
         async def scenario():
-            with bluetooth("philips_ble.session", radio), redirect_stdout(output):
+            with bluetooth("ble_probe.session", radio), redirect_stdout(output):
                 matched = await run_scan(0.2, False)
                 shown = await run_scan(0.2, True)
                 empty_radio_result = dict(radio.discover_result)
@@ -537,7 +537,7 @@ class SessionBluetoothTests(unittest.TestCase):
         output = io.StringIO()
 
         async def scenario():
-            with bluetooth("philips_ble.session", radio), redirect_stdout(output):
+            with bluetooth("ble_probe.session", radio), redirect_stdout(output):
                 scan = await run_scan(1, False)
                 collect = await run_collect("scale", None, 0, 1, None)
             return scan, collect
@@ -560,7 +560,7 @@ class SessionBluetoothTests(unittest.TestCase):
         output = io.StringIO()
 
         async def scenario():
-            with bluetooth("philips_ble.session", radio), redirect_stdout(output):
+            with bluetooth("ble_probe.session", radio), redirect_stdout(output):
                 return await run_collect("scale", None, 0, 0.1, None)
 
         code = run(scenario())
@@ -573,7 +573,7 @@ class SessionBluetoothTests(unittest.TestCase):
         output = io.StringIO()
 
         async def scenario():
-            with bluetooth("philips_ble.session", radio), redirect_stdout(output):
+            with bluetooth("ble_probe.session", radio), redirect_stdout(output):
                 return await run_collect("scale", None, 0, 0.25, None, store_path=store)
 
         code = run(scenario())
@@ -606,7 +606,7 @@ class SessionBluetoothTests(unittest.TestCase):
         output = io.StringIO()
 
         async def scenario():
-            with bluetooth("philips_ble.session", radio), redirect_stdout(output):
+            with bluetooth("ble_probe.session", radio), redirect_stdout(output):
                 return await run_collect("scale", SCALE_ADDRESS, 0, 0.1, None)
 
         code = run(scenario())
@@ -625,7 +625,7 @@ class SessionBluetoothTests(unittest.TestCase):
         output = io.StringIO()
 
         async def scenario():
-            with bluetooth("philips_ble.session", radio), redirect_stdout(output):
+            with bluetooth("ble_probe.session", radio), redirect_stdout(output):
                 return await run_collect("scale", None, 0, 0.1, None)
 
         code = run(scenario())
@@ -643,7 +643,7 @@ class SessionBluetoothTests(unittest.TestCase):
         output = io.StringIO()
 
         async def scenario():
-            with bluetooth("philips_ble.session", radio), redirect_stdout(output):
+            with bluetooth("ble_probe.session", radio), redirect_stdout(output):
                 return await run_collect("scale", None, 0, 0.1, None)
 
         code = run(scenario())
@@ -678,8 +678,8 @@ class SessionBluetoothTests(unittest.TestCase):
 
         async def scenario():
             with (
-                bluetooth("philips_ble.session", radio),
-                patch("philips_ble.session.asyncio.sleep", fast),
+                bluetooth("ble_probe.session", radio),
+                patch("ble_probe.session.asyncio.sleep", fast),
                 redirect_stdout(output),
             ):
                 return await run_collect("scale", None, 0, 0.1, None)
@@ -713,8 +713,8 @@ class SessionBluetoothTests(unittest.TestCase):
 
         async def scenario():
             with (
-                bluetooth("philips_ble.session", radio),
-                patch("philips_ble.session.asyncio.sleep", fast),
+                bluetooth("ble_probe.session", radio),
+                patch("ble_probe.session.asyncio.sleep", fast),
                 redirect_stdout(output),
             ):
                 task = asyncio.create_task(run_watch(None, None, 0))
