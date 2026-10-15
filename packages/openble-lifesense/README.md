@@ -84,4 +84,4 @@ Not affiliated with Philips or Lifesense. The names identify the devices this in
 
 ## License
 
-[MIT-0](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-lifesense/LICENSE). Use it however you like; no attribution required.
+[MIT License](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-lifesense/LICENSE), copyright 2026 Kadima Tech.

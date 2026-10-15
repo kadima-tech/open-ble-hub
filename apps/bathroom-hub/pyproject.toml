@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Raspberry Pi hub for bathroom devices: weighs from a Lifesense scale to Google Health."
 readme = "README.md"
 requires-python = ">=3.11"
-license = "MIT-0"
+license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Kadima Tech" }]
 # Deployed with deploy/install.sh, not published.

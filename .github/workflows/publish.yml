@@ -54,7 +54,7 @@ jobs:
 
   publish:
     needs: build
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/project/${{ needs.build.outputs.dist }}/

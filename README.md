@@ -102,7 +102,7 @@ git push origin openble-lifesense-v0.1.0
 | `DESIGN.md` | The web app's design language |
 | `CONTRIBUTING.md` | Development setup, tests and pull requests |
 | `SECURITY.md` | How to report a vulnerability |
-| `LICENSE` | MIT-0 |
+| `LICENSE` | MIT License |
 
 ## Contributing
 
@@ -110,4 +110,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, tests and pull requests. Repor
 
 ## License
 
-Everything here is released under [MIT No Attribution (MIT-0)](LICENSE), copyright 2026 Kadima Tech: use, copy and change it without attribution. Each package and app carries its own copy of the license. The Instrument Sans font in `apps/bathroom-hub/src/bathroom_hub/static/fonts/` remains under the SIL Open Font License (`OFL.txt` next to the font).
+Everything here is released under the [MIT License](LICENSE), copyright 2026 Kadima Tech. Each package and app carries its own copy of the license. The Instrument Sans font in `apps/bathroom-hub/src/bathroom_hub/static/fonts/` remains under the SIL Open Font License (`OFL.txt` next to the font).

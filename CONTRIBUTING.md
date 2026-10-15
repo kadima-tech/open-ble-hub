@@ -1,6 +1,6 @@
 # Contributing
 
-Open BLE Hub welcomes fixes and support for more devices. Contributions are licensed under [MIT No Attribution (MIT-0)](LICENSE), copyright 2026 Kadima Tech.
+Open BLE Hub welcomes fixes and support for more devices. Contributions are licensed under the [MIT License](LICENSE), copyright 2026 Kadima Tech.
 
 ## Development setup
 
@@ -97,6 +97,6 @@ Do not commit databases, tokens, client secrets, pairing files, or `readings.jso
 
 ## License
 
-This project is under MIT No Attribution (MIT-0), copyright 2026 Kadima Tech. See [LICENSE](LICENSE); each library and app carries the same file. Sending a contribution means you license it under those terms.
+This project is under the MIT License, copyright 2026 Kadima Tech. See [LICENSE](LICENSE); each library and app carries the same file. Sending a contribution means you license it under those terms.
 
-The Instrument Sans files in `apps/bathroom-hub/src/bathroom_hub/static/fonts/` stay under the SIL Open Font License (`OFL.txt` beside them). That license is separate from MIT-0.
+The Instrument Sans files in `apps/bathroom-hub/src/bathroom_hub/static/fonts/` stay under the SIL Open Font License (`OFL.txt` beside them). That license is separate from MIT.

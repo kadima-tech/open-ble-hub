@@ -30,4 +30,4 @@ Not affiliated with Philips. The names identify the devices this interoperates w
 
 ## License
 
-[MIT-0](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-sonicare/LICENSE). Use it however you like; no attribution required.
+[MIT License](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-sonicare/LICENSE), copyright 2026 Kadima Tech.

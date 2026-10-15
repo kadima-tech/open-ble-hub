@@ -46,4 +46,4 @@ The first visit starts onboarding:
 
 ## License
 
-[MIT-0](LICENSE), copyright 2026 Kadima Tech. The Instrument Sans font in `src/bathroom_hub/static/fonts/` remains under the SIL Open Font License (`OFL.txt` next to the font).
+[MIT License](LICENSE), copyright 2026 Kadima Tech. The Instrument Sans font in `src/bathroom_hub/static/fonts/` remains under the SIL Open Font License (`OFL.txt` next to the font).

@@ -23,4 +23,4 @@ Allow Bluetooth for the terminal in System Settings → Privacy & Security → B
 
 ## License
 
-[MIT-0](LICENSE).
+[MIT License](LICENSE), copyright 2026 Kadima Tech.
