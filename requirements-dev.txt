@@ -1,4 +1,5 @@
 # Every package in this repository, installed editable into .venv by `make`.
+-e packages/openble-bondtouch
 -e packages/openble-lifesense
 -e packages/openble-lovense
 -e packages/openble-sonicare

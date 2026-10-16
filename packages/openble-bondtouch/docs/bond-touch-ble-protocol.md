@@ -1,8 +1,8 @@
 # Bond Touch BLE protocol
 
-Static protocol notes for Bond Touch bracelets (Impossible Labs), read from the Bond Touch Android app. There is no `openble-bondtouch` library yet; when one is added, this manual moves to its `docs/` folder.
+Static protocol notes for Bond Touch bracelets (Impossible Labs), read from the Bond Touch Android app. The `openble-bondtouch` library in this package implements them.
 
-This is interoperability documentation of a local app binary. It is not a capture from a live bracelet.
+This is interoperability documentation of a local app binary. One live bracelet has since been checked against it; see [Live check](#live-check). Everything else is still static.
 
 ## Overview
 
@@ -24,6 +24,38 @@ The app supports five bracelet generations. Four of them (V1, V2, V4, Mini) shar
 **Evidence key.** "Observed" means the behaviour is read directly from decompiled code, with its class cited. "Inferred" means it was reasoned from code but not proven. Open items are listed at the end.
 
 **Scope.** Talking to a bracelet you own from an open-source client: discovery, setup, touch in, touch out, colours, settings and battery. The Bond cloud (accounts, partner pairing, message relay) is out of scope except where it explains what the app sends over BLE. A short appendix covers the Bond Heart, a different product handled by the same app.
+
+### Live check
+
+On 2026-10-16 the `openble-bondtouch` library drove a V2 bracelet over bleak on macOS, with the phone's Bluetooth off. The bracelet had been set up by the official app before. Raw reads, writes and notifications:
+
+| Step | Sent | Received |
+| --- | --- | --- |
+| Advertisement | — | Name `BOND`. Service `180a` (Device Information). Manufacturer data, company `0xFFFF`: 6 bytes, `e7 56 46 be d7 fc` |
+| GATT | — | DIS: `2a29`, `2a24`, `2a25`, `2a27`, `2a26`, all read. `…0001`: `ff01` read, `ff05` read, `ff06` read + notify, `ff10` read. `…0002`: `ffa1` and `ffa2` write + write without response, `ffa4` and `ffa5` read + notify, `ffa6` read + write without response. No `ffa7` or `ffa8` |
+| API version | read `ff10` | `42 00 00 00` → V2 |
+| Firmware, model | read `2a26`, `2a24` | `2.6.4`, `Bond002` |
+| Battery | read `ff06` | `32 00` (50 %), later `1e 00` (30 %) |
+| State | read `ffa4` | `82` + 19 zero bytes: `WAITING_TOKEN` |
+| Token | `12345678` to `ffa1` | `ffa4` `83`: `WAITING_AUID` |
+| New AUID | 4 bytes LE to `ffa2` | `ffa4` `83 00 01` (ledBusy), `ffa5` `12` `AUID_ERROR`, `ffa4` `84` `OOBE`. The LED flashes on and off |
+| Double-tap on the bracelet | — | `ffa5` `13` `PAIRED_SIGNAL` |
+| Paired acknowledgement | `31 00 11 22 33 44` + zeros to `ffa6` | `ffa4` `85` `CONNECTED`, then `86` and `ffa5` `15 00 … ff ff ff ff` |
+| Later connections, same AUID | token, then AUID | `ffa5` `11` `AUID_RIGHT`, `ffa4` `85`. No double-tap |
+| Show colour | `0x26` mode 1, total `0xFFFF` | The LED lit in the colour sent (`FF44A6`, `23E0E8`) |
+| Clear colour | `0x26` mode 4 | LED off |
+| Play a pattern | three queued `0x26` steps, then `32 00 11` | Vibration and LED as sent. `ffa4` went `85` → `88` `QUEUE_EXECUTING` → `85`; `ffa5` `16` `TAP_DETECTED_SIGNAL` arrived meanwhile |
+| Touch the bracelet | — | `ffa4` `86` `MSG`. `ffa5` `14 01 68…`, `14 02 e602… 1602…`, `14 03 3205… d201…`, then `15 04 … ff ff ff ff`. Pattern `[104, 534, 742, 466, 1330]` |
+
+What that changes in this manual:
+
+- V2 advertises `BOND`, as the app's name filter expects. It also advertises the Device Information service and 6 bytes of manufacturer data under company `0xFFFF` (reserved for testing). The app never reads them; what the bytes are is open.
+- `ffa6` has no write-with-response on this firmware. Write it without response.
+- `ff10` is 4 bytes and `ffa4` 20; only the first byte, and the first five, carry anything. `ff01` and `ff05` exist but the app does not use them.
+- A bracelet that holds another phone's AUID does not need a factory reset. It answers `AUID_ERROR`, goes to `OOBE` and flashes. The app's setup screen (`connect_setup_sub`) then says "Your bracelet should be flashing right now. Double-tap it to continue." The double-tap sends `PAIRED_SIGNAL`, the paired acknowledgement completes setup, and the bracelet keeps the new AUID from then on. The official app then has to go through the same step.
+- The bracelet repeats a state whenever another `ffa4` byte changes, such as `ledBusy`. The app acts only when `bondState` changes (`m4237O`); a client that answers every notification writes the AUID twice.
+- The live touch had no press with `stop == 0xFFFFFFFF`. It ended with `SEND_MSG_TIMEOUT`, whose counter was the number of presses + 1 and whose `stop` was `0xFFFFFFFF`. The app delivers what it collected on any timeout except one with counter 0 (`BleBondManagerV2.mo4212P`); see [Recording a touch](#ffa5-events-v2v4mini).
+- Firmware 2.6.4 is older than the app's 2.7.9 target, so the app would offer an update first. Without that update and without OS bonding, setup, colours, patterns and touches all worked.
 
 ### Product generations
 
@@ -116,9 +148,9 @@ Field formats below follow Android's `FORMAT_UINT8/16/32` (all little-endian) un
 The bracelet drives setup through its state value. The app's answers are fixed:
 
 - **Token**: the ASCII string `12345678`, written as soon as the bracelet asks (V2 writes it straight after subscribing). There is no per-device secret. Observed in `WriteStringCommand`, `BleBondManagerV2Base.m4238Q` and `BleBondManagerV3` (state `0x82`).
-- **AUID**: a random 32-bit integer the app generates once and stores as `SAVED_AUID` (`BleBondPrefs.m4125a`). V1/V2/V4/Mini write it to `ffa2` as `uint32 LE`; V3 sends only its low byte. Inferred: the AUID ties the bracelet to one phone, and a bracelet that already holds a different AUID raises `AUID_ERROR` (event `0x12`), after which the app asks the user to reset or re-pair.
+- **AUID**: a random 32-bit integer the app generates once and stores as `SAVED_AUID` (`BleBondPrefs.m4125a`). V1/V2/V4/Mini write it to `ffa2` as `uint32 LE`; V3 sends only its low byte. The AUID ties the bracelet to one phone. A bracelet that holds a different AUID raises `AUID_ERROR` (event `0x12`), and the app moves to its `OOBE` connection state (`BleBondClient$bleBondManagerListener$1.m4058a`).
 
-A third-party client can make up its own AUID. Reusing the official app's value (it lives in that app's private preferences) would probably avoid a bracelet reset, but that is unverified.
+A third-party client can make up its own AUID. Live on V2, a bracelet set up by the official app went to `OOBE` and flashed; a double-tap sent `PAIRED_SIGNAL`, the paired acknowledgement finished setup, and the new AUID was accepted from then on (see [Live check](#live-check)). Keep the AUID: every new one costs the wearer a double-tap.
 
 ## V1 (original Bond Touch)
 
@@ -237,13 +269,15 @@ Observed in the `BleBondManagerV2Base` constructor:
 | `0x00` | `NO_STATE` | — |
 | `0x82` | `WAITING_TOKEN` | Write `12345678` to `ffa1` |
 | `0x83` | `WAITING_AUID` | Write AUID `uint32 LE` to `ffa2` |
-| `0x84` | `OOBE` | — |
+| `0x84` | `OOBE` | — (live: after `AUID_ERROR`, flashing until the wearer double-taps) |
 | `0x85` | `CONNECTED` | Resume the queue. On first entry, read DIS `2a26` (firmware string) |
 | `0x86` | `MSG` | Bracelet is recording or playing. Pause the queue for 15 s |
 | `0x87` | `FACTORY` | — |
 | `0x88` | `QUEUE_EXECUTING` | Bracelet is playing queued commands. The app sets a 5 s watchdog to re-check the state |
 
 `chargingState`: `0` not charging, `1` charging, `2` full, `0xFF` error. `touchBusy = 1` while the wearer is touching; the app uses it for the "touching" UI.
+
+The app acts on a state only when `bondState` differs from the last one it saw. The bracelet notifies again whenever any byte changes, so the same `bondState` arrives several times in a row.
 
 ### `ffa5` events (V2/V4/Mini)
 
@@ -259,7 +293,7 @@ Observed in the `BleBondManagerV2Base` constructor:
 | `0x16` | `TAP_DETECTED_SIGNAL` | Logged only |
 | `0x17` | `NO_ACTION_DOUBLE_TAP_DETECTED` | Double tap. The app can answer with the wearer's colour (see `0x26` presets) |
 
-**Recording a touch (V2/V4).** Each `SEND_MSG` event is one press. `counter = 1` starts a new pattern `[max(touchMs, 50)]`. Later events append `max(releaseMs, 50)` (the gap before this press) and then `max(touchMs, 50)`. `stop == 0xFFFFFFFF` marks the last press, and the pattern is complete. `SEND_MSG_TIMEOUT` with `counter == 0` discards what was collected. On V4, byte 14 is the partner slot (1–3) chosen on the bracelet's menu; any other value means slot 1.
+**Recording a touch (V2/V4).** Each `SEND_MSG` event is one press. `counter = 1` starts a new pattern `[max(touchMs, 50)]`. Later events append `max(releaseMs, 50)` (the gap before this press) and then `max(touchMs, 50)`. `stop == 0xFFFFFFFF` marks the last press, and the pattern is complete. A `SEND_MSG_TIMEOUT` also ends it: with `counter == 0` the app discards what was collected, with any other counter it delivers it (`BleBondManagerV2.mo4212P`, V4 alike). Live, a V2 on 2.6.4 ended its touch this way, with a counter one past the last press and `stop = 0xFFFFFFFF` in the timeout event. On V4, byte 14 is the partner slot (1–3) chosen on the bracelet's menu; any other value means slot 1.
 
 The **Mini** has no pattern: whatever it reports, the app treats every touch as the fixed pattern `[500, 250, 500, 250, 500]`.
 
@@ -586,8 +620,9 @@ The bracelet does not need a keepalive. Leave a colour on with `0x26` and total 
 
 These need a capture from real hardware or more static work:
 
-- [ ] Which advertised name each generation really uses (the app only matches names, then reads `ff10`).
-- [ ] Whether a bracelet set up by the official app accepts a new AUID without a factory reset (`RESET_CONFIG`, `0xEF`).
+- [ ] Which advertised name V1, V3, V4 and Mini really use (V2 advertises `BOND`), and what the 6 bytes of manufacturer data under company `0xFFFF` are.
+- [x] Whether a bracelet set up by the official app accepts a new AUID without a factory reset: yes on V2, after a double-tap (see [Live check](#live-check)).
+- [ ] What `ff01` and `ff05` hold (present on V2 2.6.4, unused by the app).
 - [ ] Whether `ffa8` (V4/Mini) and the `ANCS_PARAM` path (V2) really are what starts OS pairing, and what fails without it.
 - [ ] The V3 battery notification layout (type `0x09`) and which of `01 19/1B/41/42/1C` requests which report.
 - [ ] The meaning of the V1 `0x0026` `mode` values and the time unit (`ms × 10 / steps`).

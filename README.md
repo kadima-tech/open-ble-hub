@@ -24,12 +24,13 @@ One library per device protocol, published to PyPI under the `openble` namespace
 | [openble-lifesense](packages/openble-lifesense) | Lifesense A2/A3 scales, including the Philips DL8780 | `openble.lifesense` | [scale](packages/openble-lifesense/docs/lifesense-scale-protocol.md), [DL8780 live](packages/openble-lifesense/docs/dl8780-connection-handoff.md) |
 | [openble-sonicare](packages/openble-sonicare) | Philips Sonicare toothbrushes | `openble.sonicare` | [toothbrush](packages/openble-sonicare/docs/sonicare-toothbrush-protocol.md) |
 | [openble-lovense](packages/openble-lovense) | Lovense toys | `openble.lovense` | [toys](packages/openble-lovense/docs/lovense-ble-protocol.md) |
+| [openble-bondtouch](packages/openble-bondtouch) | Bond Touch bracelets | `openble.bondtouch` | [bracelets](packages/openble-bondtouch/docs/bond-touch-ble-protocol.md) |
 
 ```
 pip install openble-lifesense
 ```
 
-Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Bond Touch bracelets](docs/bond-touch-ble-protocol.md), [Muse EEG headbands](docs/muse-ble-protocol.md).
+Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Muse EEG headbands](docs/muse-ble-protocol.md).
 
 ## Front-ends
 
