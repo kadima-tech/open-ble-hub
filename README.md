@@ -28,7 +28,7 @@ One library per device protocol, published to PyPI under the `openble` namespace
 pip install openble-lifesense
 ```
 
-Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Lovense toys](docs/lovense-ble-protocol.md).
+Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Lovense toys](docs/lovense-ble-protocol.md), [Bond Touch bracelets](docs/bond-touch-ble-protocol.md).
 
 ## Front-ends
 
