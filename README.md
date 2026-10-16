@@ -45,7 +45,12 @@ Apps in this repository, each using a selection of the libraries. They are not p
 | Device | Model | Library | What is read | Status |
 | --- | --- | --- | --- | --- |
 | Philips body analysis scale | DL8780 | openble-lifesense | Weight, impedance → body fat and lean mass (calculated per person in the Bathroom Hub) | Supported |
+| Lovense | Max | openble-lovense | Device type, firmware, battery and capabilities; drives vibration (`Vibrate:`, `LVS:`) | Supported |
+| Interaxon Muse EEG headband | Muse S | openble-muse | EEG, accelerometer, gyro and battery streams; start-up sequence and presets | Supported |
+| Bond Touch bracelet | V2 | openble-bondtouch | Setup and received touches; plays colours and vibration patterns | Supported |
 | Philips Sonicare toothbrush | HX9393 | openble-sonicare | GATT map and advertisement matching; most byte layouts still open | Planned |
+
+The model column lists the devices we have tested. Other devices that speak the same protocol will likely work too: other Lifesense A2/A3 scales, other Lovense toys, the Muse 2016, Muse 2 and Muse S Athena, and the other Bond Touch generations (V1, V3, V4, Mini). If you try one, please report how it went in an issue. **Supported** means the library has been checked against a live device of that model. The Lovense, Muse and Bond Touch libraries are not part of a hub yet, so use them directly from your own code. **Planned** means work has started but the device cannot be used yet.
 
 **We welcome support for more devices**: see [Adding a device](#adding-a-device).
 
