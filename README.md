@@ -13,7 +13,7 @@ We believe in:
 - **Cloud sync that is opt-in, per person, and easy to turn off.** Today that is Google Health. Each person connects their own account from onboarding or their profile. Until they do, readings stay on the hub. Connecting later also sends readings already stored here. Disconnecting that account stops further uploads. While the account stays linked, uploads continue; there is no separate pause switch. Apple Health is not in the hub today.
 - **Keeping old devices out of landfill by keeping them useful.** Open notes for devices old and new are how a device stays usable after its maker moves on.
 
-Open BLE Hub is an independent project. It is not affiliated with or endorsed by Philips, Lifesense, Lovense or any other device maker; their names identify the devices this interoperates with. It is not a medical device.
+Open BLE Hub is an independent project. It is not affiliated with or endorsed by Philips, Lifesense, Lovense, Impossible Labs or any other device maker; their names identify the devices this interoperates with. It is not a medical device.
 
 ## Libraries
 
@@ -28,6 +28,8 @@ One library per device protocol, published to PyPI under the `openble` namespace
 ```
 pip install openble-lifesense
 ```
+
+Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Bond Touch bracelets](docs/bond-touch-ble-protocol.md).
 
 ## Front-ends
 
@@ -99,6 +101,7 @@ git push origin openble-lifesense-v0.1.0
 | `packages/` | The libraries, one per device protocol, each with its tests and protocol notes |
 | `apps/bathroom-hub/` | The Bathroom Hub: listener, assignment, body composition, Google Health client, SQLite storage, web app, and the Raspberry Pi installer in `deploy/` |
 | `apps/ble-probe/` | The diagnostic CLI |
+| `docs/` | Protocol manuals for devices that have no library yet |
 | `tests/` | Bluetooth tests that drive both apps against bleak's real API, with no radio |
 | `DESIGN.md` | The web app's design language |
 | `CONTRIBUTING.md` | Development setup, tests and pull requests |
