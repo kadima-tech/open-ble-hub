@@ -25,12 +25,11 @@ One library per device protocol, published to PyPI under the `openble` namespace
 | [openble-sonicare](packages/openble-sonicare) | Philips Sonicare toothbrushes | `openble.sonicare` | [toothbrush](packages/openble-sonicare/docs/sonicare-toothbrush-protocol.md) |
 | [openble-lovense](packages/openble-lovense) | Lovense toys | `openble.lovense` | [toys](packages/openble-lovense/docs/lovense-ble-protocol.md) |
 | [openble-muse](packages/openble-muse) | Interaxon Muse EEG headbands | `openble.muse` | [headbands](packages/openble-muse/docs/muse-ble-protocol.md) |
+| [openble-bondtouch](packages/openble-bondtouch) | Bond Touch bracelets | `openble.bondtouch` | [bracelets](packages/openble-bondtouch/docs/bond-touch-ble-protocol.md) |
 
 ```
 pip install openble-lifesense
 ```
-
-Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Bond Touch bracelets](docs/bond-touch-ble-protocol.md).
 
 ## Front-ends
 
@@ -102,7 +101,6 @@ git push origin openble-lifesense-v0.1.0
 | `packages/` | The libraries, one per device protocol, each with its tests and protocol notes |
 | `apps/bathroom-hub/` | The Bathroom Hub: listener, assignment, body composition, Google Health client, SQLite storage, web app, and the Raspberry Pi installer in `deploy/` |
 | `apps/ble-probe/` | The diagnostic CLI |
-| `docs/` | Protocol manuals for devices that have no library yet |
 | `tests/` | Bluetooth tests that drive both apps against bleak's real API, with no radio |
 | `DESIGN.md` | The web app's design language |
 | `CONTRIBUTING.md` | Development setup, tests and pull requests |

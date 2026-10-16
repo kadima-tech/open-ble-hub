@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openble-bondtouch"
+version = "0.1.0"
+description = "Bond Touch bracelet BLE protocol: GATT map, setup handshake, touch patterns, LED and motor frames and a session link, without a Bluetooth stack."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Kadima Tech" }]
+keywords = ["bluetooth", "ble", "bond-touch"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Home Automation",
+    "Topic :: System :: Hardware",
+]
+dependencies = []
+
+[project.urls]
+Source = "https://github.com/kadima-tech/open-ble-hub/tree/main/packages/openble-bondtouch"
+Issues = "https://github.com/kadima-tech/open-ble-hub/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openble"]
