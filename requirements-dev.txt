@@ -2,6 +2,7 @@
 -e packages/openble-bondtouch
 -e packages/openble-lifesense
 -e packages/openble-lovense
+-e packages/openble-muse
 -e packages/openble-sonicare
 -e apps/ble-probe
 -e apps/bathroom-hub
