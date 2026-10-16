@@ -16,7 +16,7 @@ concurrency:
 jobs:
   lint:
     name: ruff
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - name: Check out
@@ -35,8 +35,8 @@ jobs:
           version: "0.17.0"
 
   test:
-    name: test (${{ matrix.os }}, ${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
+    name: test (${{ matrix.python-version }})
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -44,8 +44,8 @@ jobs:
         # 3.11 is the minimum in README and CONTRIBUTING. 3.12–3.14 are the
         # later releases the same syntax runs on. make test installs
         # every package and app editable, including bleak, and runs the Bluetooth fakes in
-        # tests/test_bluetooth.py. Those tests do not open a radio.
-        os: [ubuntu-latest, macos-latest]
+        # tests/test_bluetooth.py. Those tests do not open a radio. Linux
+        # only: macOS runners cost more and added little.
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Check out
