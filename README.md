@@ -50,7 +50,7 @@ Apps in this repository, each using a selection of the libraries. They are not p
 | Bond Touch bracelet | V2 | openble-bondtouch | Setup and received touches; plays colours and vibration patterns | Supported |
 | Philips Sonicare toothbrush | HX9393 | openble-sonicare | GATT map and advertisement matching; most byte layouts still open | Planned |
 
-**Supported** means the library has been checked against a live device of that model; other models of the same family may work but are untested. The Lovense, Muse and Bond Touch libraries are not part of a hub yet, so use them directly from your own code. **Planned** means work has started but the device cannot be used yet.
+The model column lists the devices we have tested. Other devices that speak the same protocol will likely work too: other Lifesense A2/A3 scales, other Lovense toys, the Muse 2016, Muse 2 and Muse S Athena, and the other Bond Touch generations (V1, V3, V4, Mini). If you try one, please report how it went in an issue. **Supported** means the library has been checked against a live device of that model. The Lovense, Muse and Bond Touch libraries are not part of a hub yet, so use them directly from your own code. **Planned** means work has started but the device cannot be used yet.
 
 **We welcome support for more devices**: see [Adding a device](#adding-a-device).
 
