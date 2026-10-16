@@ -29,7 +29,7 @@ One library per device protocol, published to PyPI under the `openble` namespace
 pip install openble-lifesense
 ```
 
-Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Bond Touch bracelets](docs/bond-touch-ble-protocol.md).
+Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Bond Touch bracelets](docs/bond-touch-ble-protocol.md), [Muse EEG headbands](docs/muse-ble-protocol.md).
 
 ## Front-ends
 
