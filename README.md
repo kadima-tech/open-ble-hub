@@ -13,7 +13,7 @@ We believe in:
 - **Cloud sync that is opt-in, per person, and easy to turn off.** Today that is Google Health. Each person connects their own account from onboarding or their profile. Until they do, readings stay on the hub. Connecting later also sends readings already stored here. Disconnecting that account stops further uploads. While the account stays linked, uploads continue; there is no separate pause switch. Apple Health is not in the hub today.
 - **Keeping old devices out of landfill by keeping them useful.** Open notes for devices old and new are how a device stays usable after its maker moves on.
 
-Open BLE Hub is an independent project. It is not affiliated with or endorsed by Philips, Lifesense or any other device maker; their names identify the devices this interoperates with. It is not a medical device.
+Open BLE Hub is an independent project. It is not affiliated with or endorsed by Philips, Lifesense, Lovense, Impossible Labs or any other device maker; their names identify the devices this interoperates with. It is not a medical device.
 
 ## Libraries
 
@@ -23,12 +23,13 @@ One library per device protocol, published to PyPI under the `openble` namespace
 | --- | --- | --- | --- |
 | [openble-lifesense](packages/openble-lifesense) | Lifesense A2/A3 scales, including the Philips DL8780 | `openble.lifesense` | [scale](packages/openble-lifesense/docs/lifesense-scale-protocol.md), [DL8780 live](packages/openble-lifesense/docs/dl8780-connection-handoff.md) |
 | [openble-sonicare](packages/openble-sonicare) | Philips Sonicare toothbrushes | `openble.sonicare` | [toothbrush](packages/openble-sonicare/docs/sonicare-toothbrush-protocol.md) |
+| [openble-lovense](packages/openble-lovense) | Lovense toys | `openble.lovense` | [toys](packages/openble-lovense/docs/lovense-ble-protocol.md) |
 
 ```
 pip install openble-lifesense
 ```
 
-Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Lovense toys](docs/lovense-ble-protocol.md), [Bond Touch bracelets](docs/bond-touch-ble-protocol.md).
+Protocol manuals for devices that have no library yet are in [`docs/`](docs): [Bond Touch bracelets](docs/bond-touch-ble-protocol.md).
 
 ## Front-ends
 
