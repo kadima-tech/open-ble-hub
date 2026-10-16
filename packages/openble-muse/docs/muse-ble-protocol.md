@@ -1,8 +1,26 @@
 # Muse BLE protocol
 
-Protocol notes for Interaxon Muse EEG headbands. They combine a static reading of the official Muse Android app, which embeds Interaxon's protocol library (libmuse), with existing open-source work. There is no `openble-muse` library yet; when one is added, this manual moves to its `docs/` folder.
+Protocol notes for Interaxon Muse EEG headbands. They combine a static reading of the official Muse Android app, which embeds Interaxon's protocol library (libmuse), with existing open-source work. The `openble-muse` library in this package implements them; see [Library choices](#library-choices) for where it picks between the app and public work.
 
-This is interoperability documentation. It is not a capture from a live headband.
+This is interoperability documentation. One live headband has since been checked against it; see [Live check](#live-check). Everything else is still static.
+
+### Live check
+
+On 2026-10-16 the `openble-muse` library drove a Muse S over bleak on macOS, with no Muse app running, using `prepare()` with the default preset and 10 s of streaming.
+
+| Item | Seen |
+| --- | --- |
+| Advertisement | name `MuseS-36C4`; manufacturer data under company ID `0x0030`, `01 05 00 00 00 00 00 00`. Byte 1 is `5` = `aster`, read the way bleak hands it over (company ID stripped) |
+| GATT | `273e0001` (notify, write-without-response) and `273e0002`–`273e0012`: 18 characteristics, one of the counts the app accepts |
+| `v7` reply | `{"ap":"headset","sp":"Aster_revD","tp":"consumer","hw":"00.8","bn":7,"fi":"9623a79","fw":"1.0.1","bl":"0.0.28","pv":1,"rc":0}`. `pv` 1 to `v7`. `fi` is not in the app's key list |
+| `s` reply | `sn` `5008-…` → `MU_04`; `bp` 25; `ps` 81, then 33 after `p21`; `hs`, `ts` present; no `ln`, `ms` |
+| Sequence | `v7` → `s` → `h` → `p21` → `s` → `dc001` (one send) → data; `h` at the end. Every command answered `{"rc":0}` |
+| Data, 10 s | 214 notifications on each of `0003`–`0006` (4 EEG channels, 21.4/s × 12 = 256 Hz); 172 each on `0009` and `000a` (52 Hz); 47 on `0008`; 1 on `000b`. No counter gaps. `p21` sent nothing on the PPG or thermistor characteristics |
+| Accelerometer | about 1 g at rest with `raw / 16384`, e.g. `(0.381, 0.089, −0.936)` |
+| Battery packet | `[0]`/512 = 30 % while `bp` said 25; `[1]`×2.2 = 3100 mV; `[2]` and `[3]` were 0 |
+| EEG | raw values spanned 0–4095 with a mean near 1300: the electrodes were railing, so this run does not settle the EEG scale or offset |
+
+`ps` is the preset code read as hexadecimal and sent as a JSON integer: 33 = `0x21`, 81 = `0x51`.
 
 ## Overview
 
@@ -200,6 +218,7 @@ Keys read in `bridge::MuseVersion::make_version`. Meanings are inferred from the
 | `bl` | bootloader version | |
 | `pv` | protocol version (int) | the app accepts 1–7 |
 | `be` | unknown (read by the app; not in older libmuse) | |
+| `fi` | not read by the app; a Muse S on firmware 1.0.1 sent `"9623a79"`, which looks like a commit hash | live check |
 
 ### Status reply
 
@@ -213,7 +232,7 @@ Keys read in `bridge::MuseConfigurationImpl::make_configuration`. Meanings are i
 | `ma` | Bluetooth MAC | yes |
 | `id` | microcontroller ID | yes |
 | `bp` | battery percent | yes |
-| `ps` | current preset | no |
+| `ps` | current preset: the code as a hex number, sent as an int (33 = preset `21`; live check) | no |
 | `ts` | test-mode flag (logs "test mode enabled") | no |
 | `hs` | headset serial number | no |
 | `ln` | licence nonce | no |
@@ -613,9 +632,27 @@ async def start(gatt, preset="21"):
 | BLE4 frame order | reorder by the u16 frame counter | `Ble4NotificationReorderer` |
 | Athena time sync (`pv` ≥ 5) | every 5 s on `273e0015` | `ConnectorImpl::timesync`, `TIMESYNC_INTERVAL` |
 
+### Library choices
+
+Where the app and public work disagree, or neither settles a point, `openble-muse` does this:
+
+| Point | Library | Why |
+| --- | --- | --- |
+| Per-sensor and universal v3 EEG | `(raw − 2048) × 0.48828125` µV; the app's `1650/4095` without offset is `readings.EEG12_UV_PER_BIT_APP` | muse-js and muse-rs have run on hardware |
+| BLE4 EEG | `raw × 1450/16383`, no offset; `eeg_offset=8192` gives muse-rs's form | the app, amused and muse-lsl agree |
+| Gyro sign | negative (−0.0074768) in every layout | the app and the Athena projects; muse-js uses + |
+| BLE4 sample order | rows are time steps, channels within a row | amused, OpenMuse and muse-rs decode it that way (Public) |
+| BLE4 `0x88` battery | the payload runs to the end of the frame; `0x98` is 20 bytes | OpenMuse and muse-rs see 188–230 bytes; the app reads 20 |
+| Several frames in one notification | walked by their length bytes (`ble4.parse_notification`) | OpenMuse does this; the app's one-frame case still parses |
+| Unknown sub-packet type | parsing stops and the rest is kept in `Frame.unparsed` | the app rejects the frame; keeping the bytes helps a live capture |
+| BLE4 channel names | muse-rs's EEG names; optics are `optics_0`… | the app does not name them and the public projects differ on optics |
+| `TIME_SYNC` | not subscribed and not written | its message format is open |
+
+OpenMuse and muse-rs read the BLE4 header differently from the app: byte 1 as a u8 packet index and bytes 2–5 as a u32 clock at 256 kHz, where the app reads a u16 counter at bytes 1–2 and a u48 clock at bytes 3–8. `ble4.Frame` follows the app.
+
 ### Open questions
 
-These need a capture from real hardware or more static work:
+These need a capture from real hardware or more static work. The Muse S live check answered some of them for that headband: `pv` 1, one `dc001` is enough, and `ps` is the preset code in hex.
 
 - [ ] What `pv` does current Athena firmware report to `v7`? Does the reply depend on the number sent (`v4`, `v6`, `v7`)?
 - [ ] The meaning of `0xC001` in `dc001`, and why public clients send it twice.
@@ -623,10 +660,11 @@ These need a capture from real hardware or more static work:
 - [ ] The BLE4 time-sync message format on `273e0015`, and how the headband uses it.
 - [ ] Which BLE4 frames arrive on `273e0013` and which on `273e0014`.
 - [ ] BLE4 EEG offset: the app scales by 1450/16383 with no offset found; muse-rs subtracts 8192.
-- [ ] Per-sensor EEG scale and offset: the app uses 0.40293 µV with no offset; muse-js uses `(raw−2048)×0.488`.
+- [ ] Per-sensor EEG scale and offset: the app uses 0.40293 µV with no offset; muse-js uses `(raw−2048)×0.488`. Needs a capture with the headband worn.
+- [ ] Per-sensor battery: `[0]`/512 gave 30 % while the status reply's `bp` said 25 on the same connection.
 - [ ] PPG and optics units: per-sensor PPG is scaled ×805.86, BLE4 optics ×3.05e-5.
 - [ ] The app's default Athena preset `p1021` and the other `102x`/`103x` codes that public tables don't list.
-- [ ] BLE4 battery: muse-rs sees 188–230-byte `0x88` sub-packets, while the app parses a fixed 20 bytes. Also unknown: the battery fields after `[0]`; status keys `ms`, `ts`, `ps`; version key `be`.
+- [ ] BLE4 battery: muse-rs sees 188–230-byte `0x88` sub-packets, while the app parses a fixed 20 bytes. Also unknown: the battery fields after `[0]`; status keys `ms`, `ts`; version keys `be`, `fi`.
 - [ ] Which product `letto` (hardware generation 6) is.
 
 ### Evidence
