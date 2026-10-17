@@ -1,0 +1,12 @@
+# Weekly automatic updates for one hub app. Off until enabled:
+#   sudo systemctl enable --now hub-update@bathroom-hub.timer
+[Unit]
+Description=Weekly update of %i
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00
+RandomizedDelaySec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

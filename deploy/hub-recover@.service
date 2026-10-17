@@ -1,0 +1,14 @@
+# At boot, before the app starts, roll back an update that a power cut or a
+# killed hub-update left half done. Does nothing when no update was pending.
+# hub-update enables it for every app it installs.
+[Unit]
+Description=Roll back an unfinished update of %i
+After=local-fs.target
+Before=%i.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/hub-update recover %i --no-restart
+
+[Install]
+WantedBy=multi-user.target

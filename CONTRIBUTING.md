@@ -18,14 +18,14 @@ make venv
 | --- | --- |
 | `make run` | Bathroom Hub with Bluetooth. UI at <http://localhost:8080>, data in `./data`. |
 | `make ui` | Same UI with `--no-bluetooth`. |
-| `make test` | Unit tests of every library and app, and `tests/`. No device and no network. |
+| `make test` | Unit tests of every library and app, `tests/` and `deploy/tests`. No device and no network. |
 | `make build` | Sdists and wheels of the libraries in `dist/`. |
 | `make scan`, `make scale`, `make watch` | `python -m ble_probe` against a live device. Pass extra flags with `ARGS`. |
 | `make help` | Every target. |
 
 `make run PORT=9000 DATA_DIR=/tmp/hub` overrides the port and data folder. On macOS, allow Bluetooth for your terminal under System Settings → Privacy & Security → Bluetooth.
 
-`./data` holds the SQLite database. `.philips-scale.json` holds the scale password and broadcast id. Both are gitignored. Deploy a Pi with `sudo ./apps/bathroom-hub/deploy/install.sh` from a copy of the repository on that machine.
+`./data` holds the SQLite database. `.philips-scale.json` holds the scale password and broadcast id. Both are gitignored. Deploy a Pi with `sudo ./apps/bathroom-hub/deploy/install.sh` from a copy of the repository on that machine. Update it later with `sudo hub-update update bathroom-hub`.
 
 ## Tests
 
@@ -35,7 +35,7 @@ make venv
 .venv/bin/python -m unittest discover -s packages/openble-lifesense/tests
 ```
 
-Each library and app keeps its tests in its own `tests/test_*.py`. The root `tests/` holds the Bluetooth suite that drives both apps. Tests are built from captured packets and fakes (`unittest.mock`, `aiohttp.test_utils`). They do not need a scale, an adapter, or Google credentials.
+Each library and app keeps its tests in its own `tests/test_*.py`. The root `tests/` holds the Bluetooth suite that drives both apps. `deploy/tests` drives hub-update with real git and a fake systemd and pip. Tests are built from captured packets and fakes (`unittest.mock`, `aiohttp.test_utils`). They do not need a scale, an adapter, or Google credentials.
 
 New behaviour needs tests in that style. A protocol change should carry the bytes it was checked against, the way `packages/openble-lifesense/tests/test_packets.py` and `test_link.py` do.
 
@@ -79,9 +79,9 @@ Branch from `main`. Keep the change focused.
 - Double quotes. A short module docstring. Imports are standard library, then third party, then local.
 - Comments explain a protocol detail or a captured-packet fact. Names say what the value is (`weight_kg`, `refresh_token`).
 - Device bytes stay in a library under `packages/`, with the write-up in its `docs/`. Libraries have no runtime dependencies and import no Bluetooth stack. Front-ends live in `apps/`.
-- Runtime dependencies are the `dependencies` in each `pyproject.toml`. There is no lockfile. The libraries are published to PyPI from a tag (see [Releasing a library](README.md#releasing-a-library)). The apps are not published: run them as `python -m bathroom_hub` and `python -m ble_probe`, and the Pi installs them with pip from the checkout.
+- Runtime dependencies are the `dependencies` in each `pyproject.toml`. There is no lockfile. The libraries are published to PyPI from a tag (see [Releasing a library](README.md#releasing-a-library)). The apps are not published: run them as `python -m bathroom_hub` and `python -m ble_probe`. On a Pi, [hub-update](deploy/README.md) installs a hub with pip from a release tag or a checkout. `deploy/hub_update.py` uses the standard library only, because it has to work when a release is broken.
 
-A new dependency needs a reason in the pull request: what the standard library cannot do, and that it still installs on a Raspberry Pi. `apps/bathroom-hub/deploy/install.sh` uses [piwheels](https://www.piwheels.org/simple) for 32-bit ARM.
+A new dependency needs a reason in the pull request: what the standard library cannot do, and that it still installs on a Raspberry Pi. `deploy/hub_update.py` uses [piwheels](https://www.piwheels.org/simple) for 32-bit ARM.
 
 ## Security
 

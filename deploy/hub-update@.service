@@ -1,0 +1,10 @@
+# Update one hub app to its newest release, rolling back if it is unhealthy.
+# Started by hub-update@<app>.timer, or by hand: systemctl start hub-update@bathroom-hub
+[Unit]
+Description=Update %i to its newest release
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/hub-update update %i

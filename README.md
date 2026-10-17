@@ -66,7 +66,7 @@ cd open-ble-hub
 make run
 ```
 
-`make run` creates a virtualenv in `.venv`, installs every package and app editable, and starts the Bathroom Hub with Bluetooth. Open <http://localhost:8080> and follow the onboarding. Data lives in `./data`. To install on a Raspberry Pi, see [apps/bathroom-hub](apps/bathroom-hub#install-on-a-raspberry-pi).
+`make run` creates a virtualenv in `.venv`, installs every package and app editable, and starts the Bathroom Hub with Bluetooth. Open <http://localhost:8080> and follow the onboarding. Data lives in `./data`. To install on a Raspberry Pi, see [apps/bathroom-hub](apps/bathroom-hub#install-on-a-raspberry-pi). Installed hubs update and roll back with [hub-update](deploy).
 
 ```
 make ui                               # web app only, no Bluetooth
@@ -99,6 +99,10 @@ git push origin openble-lifesense-v0.1.0
 
 [`.github/workflows/publish.yml`](.github/workflows/publish.yml) checks the version, tests the wheel on Python 3.11 and 3.14, and publishes it with PyPI trusted publishing. Each PyPI project needs a trusted publisher for this repository, workflow `publish.yml` and environment `pypi`.
 
+## Releasing a hub app
+
+Bump `version` in the app's `pyproject.toml`, merge, then push a tag `<app>-v<version>`, for example `bathroom-hub-v0.2.0`. Installed hubs pick it up with `sudo hub-update update bathroom-hub`. If the new release does not come up healthy, it is rolled back on its own. See [deploy/README.md](deploy/README.md).
+
 ## Project layout
 
 | Path | What it is |
@@ -107,6 +111,7 @@ git push origin openble-lifesense-v0.1.0
 | `apps/bathroom-hub/` | The Bathroom Hub: listener, assignment, body composition, Google Health client, SQLite storage, web app, and the Raspberry Pi installer in `deploy/` |
 | `apps/ble-probe/` | The diagnostic CLI |
 | `tests/` | Bluetooth tests that drive both apps against bleak's real API, with no radio |
+| `deploy/` | `hub-update`, which installs, updates and rolls back the hubs on a Pi |
 | `DESIGN.md` | The web app's design language |
 | `CONTRIBUTING.md` | Development setup, tests and pull requests |
 | `SECURITY.md` | How to report a vulnerability |
