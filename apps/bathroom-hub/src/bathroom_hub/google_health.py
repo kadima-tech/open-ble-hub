@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import re
 import secrets
 import time
 from datetime import UTC, datetime
@@ -36,6 +37,18 @@ BODY_FAT_TYPE = "body-fat"
 
 class GoogleError(Exception):
     pass
+
+
+ENABLE_API_LINK = re.compile(
+    r"https://console\.(?:developers|cloud)\.google\.com/apis/api/\S+"
+)
+
+
+def enable_api_url(error: str | None) -> str | None:
+    """The Cloud Console link from a "Google Health API has not been used in project … or it
+    is disabled" error, so the UI can offer a button instead of the raw message."""
+    match = ENABLE_API_LINK.search(error or "")
+    return match.group(0).rstrip(".,") if match else None
 
 
 def pkce_challenge(verifier: str) -> str:

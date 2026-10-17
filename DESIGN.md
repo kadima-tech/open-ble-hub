@@ -62,6 +62,7 @@ Person avatars use a fixed five-colour palette (`.av-0`…`.av-4`, by profile id
 ## Interaction
 
 - Every action is a form POST then a redirect (with an optional same-site `next`), confirmed by a green flash. Destructive forms carry `data-confirm`.
+- Errors with a known fix show a plain-language line and a button to the fix instead of the raw message. A Google Health API that is turned off links to the Cloud Console page that turns it on, opened in a new tab. Long error text in rows wraps anywhere so it never runs under the trailing button.
 - Pages with live state poll `/api/status` every 4s and reload when it changes, but not while someone is typing or has a menu open. The pairing countdown ticks each second.
 - Motion: only the "Searching" spinner, which stops under `prefers-reduced-motion`.
 - Touch targets at least 44px.

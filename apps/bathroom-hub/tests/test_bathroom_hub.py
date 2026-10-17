@@ -194,6 +194,19 @@ class GooglePayloadTests(unittest.TestCase):
         with self.assertRaises(google_health.GoogleError):
             google_health.parse_redirect("http://localhost/?error=access_denied&code=")
 
+    def test_enable_api_url_comes_from_a_disabled_api_error(self):
+        url = "https://console.developers.google.com/apis/api/health.googleapis.com/overview?project=123"
+        error = (
+            "weight write failed (403): Google Health API has not been used in project 123 "
+            f"before or it is disabled. Enable it by visiting {url} then retry."
+        )
+        self.assertEqual(google_health.enable_api_url(error), url)
+        self.assertEqual(google_health.enable_api_url(f"Enable it at {url}."), url)
+        self.assertIsNone(
+            google_health.enable_api_url("Token request failed: invalid_grant")
+        )
+        self.assertIsNone(google_health.enable_api_url(None))
+
     def test_authorization_url_asks_for_offline_write_access(self):
         url = google_health.authorization_url("cid", "st", "ch")
         self.assertIn("access_type=offline", url)
@@ -407,6 +420,20 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         text = await resp.text()
         self.assertIn("accounts.google.com", text)
         self.assertIsNotNone(self.db.oauth_pending_for(me))
+
+    async def test_disabled_api_error_offers_a_turn_on_button(self):
+        me = self.db.create_profile(ME)
+        self.db.save_google_link(me, "refresh", None, None)
+        url = "https://console.developers.google.com/apis/api/health.googleapis.com/overview?project=123"
+        self.db.mark_google(
+            me,
+            error=f"weight write failed (403): Google Health API has not been used in project 123 before or it is disabled. Enable it by visiting {url} then retry.",
+        )
+        for path in ("/", f"/profiles/{me}/edit"):
+            text = await (await self.client.get(path)).text()
+            self.assertIn(f'href="{url}" target="_blank"', text)
+            self.assertIn("Google Health API is off", text)
+            self.assertNotIn("has not been used", text)
 
     async def test_settings_detour_can_be_left(self):
         # Without an OAuth client, Connect sends the person to Settings. Its back arrow must not
