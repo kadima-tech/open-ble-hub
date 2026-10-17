@@ -273,11 +273,17 @@ def who_card(hub: Hub, profiles, refs, next_url: str) -> str:
 </section>"""
 
 
+API_OFF_TEXT = "Google Health API is off in the hub's Google Cloud project. Turn it on and weighs resend within 10 minutes."
+
+
 def google_row(hub: Hub, profile) -> str:
     link = hub.db.google_link(profile["id"])
     if link is None:
         text, tone = ("Not connected", "muted")
         action = f'<a class="btn btn-secondary btn-sm" href="/profiles/{profile["id"]}/google?next=/">Connect</a>'
+    elif enable_url := google_health.enable_api_url(link["last_error"]):
+        text, tone = ("Needs attention: " + API_OFF_TEXT, "error")
+        action = f'<a class="btn btn-secondary btn-sm" href="{e(enable_url)}" target="_blank" rel="noopener">Turn on API</a>'
     elif link["last_error"]:
         text, tone = ("Needs attention: " + link["last_error"], "error")
         action = f'<a class="btn btn-secondary btn-sm" href="/profiles/{profile["id"]}/google?new=1&amp;next=/">Reconnect</a>'
@@ -1061,6 +1067,11 @@ async def edit_profile(request: web.Request) -> web.Response:
     if link is None:
         google = f"""<p class="muted-small">Not connected. Weighs stay on the hub.</p>
 <a class="btn btn-secondary" href="/profiles/{profile_id}/google?next=/profiles/{profile_id}/edit">Connect Google Health</a>"""
+    elif enable_url := google_health.enable_api_url(link["last_error"]):
+        google = f"""<p class="error-text">{icon("alert", 16)} {e(API_OFF_TEXT)}</p>
+<div class="actions"><a class="btn btn-primary" href="{e(enable_url)}" target="_blank" rel="noopener">Turn on Google Health API</a>
+<form method="post" action="/profiles/{profile_id}/google/unlink" data-confirm="Disconnect this Google account? Remove the hub's access in the Google account too.">
+<button class="btn-link danger">Disconnect</button></form></div>"""
     else:
         state = (
             f'<p class="error-text">{icon("alert", 16)} {e(link["last_error"])}</p>'
