@@ -13,8 +13,9 @@ BIN       := $(VENV)/bin
 PY        := $(BIN)/python
 STAMP     := $(VENV)/.installed
 PROJECTS  := $(wildcard packages/* apps/*)
-# tests/ holds the Bluetooth suite that drives both apps against bleak.
-TEST_DIRS := $(wildcard $(addsuffix /tests,$(PROJECTS))) tests
+# tests/ holds the Bluetooth suite that drives both apps against bleak;
+# deploy/tests the updater that installs the hubs on a Pi.
+TEST_DIRS := $(wildcard $(addsuffix /tests,$(PROJECTS))) tests deploy/tests
 
 .DEFAULT_GOAL := help
 .PHONY: help venv run ui test lint build scan scale watch clean

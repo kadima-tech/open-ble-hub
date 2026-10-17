@@ -1,0 +1,12 @@
+# How deploy/hub_update.py installs, checks and rolls back Bathroom Hub.
+# Read from the release being installed, so a release can change it.
+
+# systemd unit in this directory, installed to /etc/systemd/system.
+service = "bathroom-hub.service"
+# Snapshotted before every switch and put back when a switch is rolled back.
+data_dir = "/var/lib/bathroom-hub"
+# Has to answer 200 within health_timeout seconds of starting, and the
+# service has to stay up, without a restart, for settle seconds after that.
+health_url = "http://127.0.0.1:8080/healthz"
+health_timeout = 90
+settle = 20

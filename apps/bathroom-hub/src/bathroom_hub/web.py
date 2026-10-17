@@ -16,7 +16,7 @@ from urllib.parse import quote, urlencode
 
 from aiohttp import web
 
-from bathroom_hub import charts, devices, google_health
+from bathroom_hub import __version__, charts, devices, google_health
 from bathroom_hub.bodycomp import age_on
 from bathroom_hub.hub import Hub
 
@@ -927,6 +927,12 @@ async def api_status(request: web.Request) -> web.Response:
     return web.json_response(status)
 
 
+async def healthz(request: web.Request) -> web.Response:
+    """For hub-update: answers once the database is open and the UI is serving."""
+    hub_of(request).db.conn.execute("SELECT 1").fetchone()
+    return web.json_response({"ok": True, "version": __version__})
+
+
 # -- people ----------------------------------------------------------------------
 
 
@@ -1252,6 +1258,7 @@ def create_app(hub: Hub, listener: Any) -> web.Application:
     app.router.add_get("/welcome/scale", welcome_scale)
     app.router.add_get("/history", history)
     app.router.add_get("/api/status", api_status)
+    app.router.add_get("/healthz", healthz)
     app.router.add_get("/devices", devices_page)
     app.router.add_get("/devices/add", add_device)
     app.router.add_post("/devices/pair", pair_device)

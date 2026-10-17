@@ -308,6 +308,13 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         self.db.conn.close()
         self.tmp.cleanup()
 
+    async def test_healthz_answers_before_onboarding(self):
+        resp = await self.client.get("/healthz", allow_redirects=False)
+        self.assertEqual(resp.status, 200)
+        body = await resp.json()
+        self.assertTrue(body["ok"])
+        self.assertIsInstance(body["version"], str)
+
     async def test_first_visit_goes_to_onboarding(self):
         resp = await self.client.get("/", allow_redirects=False)
         self.assertEqual((resp.status, resp.headers["Location"]), (302, "/welcome"))

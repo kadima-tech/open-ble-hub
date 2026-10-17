@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Install or update Bathroom Hub on a Raspberry Pi (DietPi or Raspberry Pi OS).
-# Run from a copy of the repository:  sudo ./apps/bathroom-hub/deploy/install.sh
+# Install Bathroom Hub on a Raspberry Pi (DietPi or Raspberry Pi OS), or update
+# it to this checkout. Run from a copy of the repository:
+#   sudo ./apps/bathroom-hub/deploy/install.sh
+# Later updates and rollbacks: sudo hub-update update bathroom-hub (deploy/README.md).
 set -euo pipefail
 
 APP_DIR=/opt/bathroom-hub
@@ -18,7 +20,7 @@ fi
 
 echo "==> Packages"
 apt-get update -qq
-apt-get install -y -qq python3 python3-venv python3-dev build-essential bluez >/dev/null
+apt-get install -y -qq python3 python3-venv python3-dev build-essential bluez git >/dev/null
 
 # Keep the data of an install under an earlier name and drop the rest. The hub
 # renames open-ble-hub.db or philips-ble-hub.db itself on start.
@@ -48,22 +50,16 @@ mkdir -p "$APP_DIR" "$DATA_DIR"
 chown -R "$SERVICE_USER:$SERVICE_USER" "$DATA_DIR"
 chmod 700 "$DATA_DIR"
 
-echo "==> Python environment in $APP_DIR"
-[[ -x "$APP_DIR/.venv/bin/python" ]] || python3 -m venv "$APP_DIR/.venv"
-PIP_ARGS=(-q)
-case "$(uname -m)" in
-  armv6l|armv7l) PIP_ARGS+=(--extra-index-url https://www.piwheels.org/simple) ;;
-esac
-"$APP_DIR/.venv/bin/pip" install "${PIP_ARGS[@]}" --upgrade pip
-# The libraries come from this checkout, so the Pi runs the same code as the repository.
-"$APP_DIR/.venv/bin/pip" install "${PIP_ARGS[@]}" "$REPO_DIR/packages/openble-lifesense" "$HUB_DIR"
-
-echo "==> systemd unit"
-install -m 644 "$HUB_DIR/deploy/bathroom-hub.service" /etc/systemd/system/bathroom-hub.service
-systemctl daemon-reload
 systemctl enable --now bluetooth >/dev/null 2>&1 || true
-systemctl enable bathroom-hub >/dev/null
-systemctl restart bathroom-hub
+
+echo "==> hub-update"
+install -m 755 "$REPO_DIR/deploy/hub_update.py" /usr/local/sbin/hub-update
+# Builds a release of this checkout in $APP_DIR/releases, switches the service
+# to it, and rolls back if it does not come up healthy. The libraries come from
+# this checkout too, so the Pi runs the same code as the repository.
+/usr/local/sbin/hub-update update bathroom-hub --source "$REPO_DIR"
+# Installs from before hub-update kept one virtualenv here.
+rm -rf "$APP_DIR/.venv"
 
 echo "==> Checks"
 for cfg in /boot/firmware/config.txt /boot/config.txt; do

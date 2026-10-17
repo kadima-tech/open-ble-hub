@@ -29,12 +29,22 @@ From a copy of this repository on the Pi:
 sudo ./apps/bathroom-hub/deploy/install.sh
 ```
 
-The script installs packages, creates a `bathroom-hub` service user, puts a Python environment with the hub and its libraries in `/opt/bathroom-hub` and its data in `/var/lib/bathroom-hub`, and starts `bathroom-hub.service`. A Pi installed as Open BLE Hub or Philips BLE Hub is moved over: the old service is removed, and its data directory and database are kept. Then open `http://<pi-address>:8080` from a phone or laptop on the same network. Before installing:
+The script installs packages, creates a `bathroom-hub` service user and the data directory `/var/lib/bathroom-hub`, and installs [hub-update](../../deploy). hub-update then builds a release of the checkout in `/opt/bathroom-hub/releases` and starts `bathroom-hub.service` on it. A Pi installed as Open BLE Hub or Philips BLE Hub is moved over: the old service is removed, and its data directory and database are kept. Then open `http://<pi-address>:8080` from a phone or laptop on the same network. Before installing:
 
 - Enable the built-in Bluetooth. DietPi turns it off by default (`dietpi-config` → Advanced Options → Bluetooth).
 - Set the timezone. The scale stamps weighs in local time.
 
 The web app has no login. Keep it on your home network.
+
+## Update or roll back
+
+```
+sudo hub-update update bathroom-hub     # newest bathroom-hub-v* release
+sudo hub-update rollback bathroom-hub   # back to the release before
+hub-update status bathroom-hub
+```
+
+An update is built next to the running hub, and the hub keeps running if the build fails. The data directory is then snapshotted and the hub is switched over. It has to answer on `/healthz` and stay up for 20 seconds, or the previous release and the snapshot are put back. An update cut short by a power cut is rolled back at the next boot. Running `install.sh` again from a newer checkout updates the same way. To update automatically every week, run `sudo systemctl enable --now hub-update@bathroom-hub.timer`. See [deploy/README.md](../../deploy/README.md) for how it works.
 
 ## First setup
 
