@@ -31,7 +31,7 @@ One library per device protocol, published to PyPI under the `openble` namespace
 pip install openble-lifesense
 ```
 
-Protocol manuals for devices that have no library yet are in [`docs/`](docs): [OBD-II adapters](docs/obd2-adapter-protocol.md) (ELM327 over Bluetooth Classic, BLE and WiFi).
+Protocol manuals for devices that have no library yet are in [`docs/`](docs): [OBD-II adapters](docs/obd2-adapter-protocol.md) (ELM327 over Bluetooth Classic, BLE and WiFi) and [SwitchBot devices](docs/switchbot-ble-protocol.md) (Bot, Curtain, meters, sensors, plugs, locks and more).
 
 ## Front-ends
 
