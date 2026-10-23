@@ -588,7 +588,10 @@ WOAN = 0x0969
 
 
 def model_byte(adv):
-    for uuid in ("00000d00-0000-1000-8000-00805f9b34fb", "0000fd3d-0000-1000-8000-00805f9b34fb"):
+    for uuid in (
+        "00000d00-0000-1000-8000-00805f9b34fb",
+        "0000fd3d-0000-1000-8000-00805f9b34fb",
+    ):
         data = adv.service_data.get(uuid)
         if data:
             return data[0] & 0x7F
@@ -621,12 +624,20 @@ class SwitchBot:
 
     async def encrypted(self, body):
         if self.iv is None:  # once per connection
-            reply = await self.raw(b"\x57\x00\x00\x00\x0f\x21\x03" + bytes([self.key_id]))
+            reply = await self.raw(
+                b"\x57\x00\x00\x00\x0f\x21\x03" + bytes([self.key_id])
+            )
             if reply[0] not in (1, 6):
                 raise RuntimeError(f"IV request failed: {reply.hex()}")
             self.iv = reply[4:20]
         enc = self._ctr().encryptor()
-        frame = b"\x57" + bytes([self.key_id]) + self.iv[:2] + enc.update(body) + enc.finalize()
+        frame = (
+            b"\x57"
+            + bytes([self.key_id])
+            + self.iv[:2]
+            + enc.update(body)
+            + enc.finalize()
+        )
         reply = await self.raw(frame)
         if reply[0] not in (1, 6):
             return reply  # failures come back unencrypted
