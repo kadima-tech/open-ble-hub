@@ -50,9 +50,9 @@ Apps in this repository, each using a selection of the libraries. They are not p
 | Lovense | Max | openble-lovense | Device type, firmware, battery and capabilities; drives vibration (`Vibrate:`, `LVS:`) | Supported |
 | Interaxon Muse EEG headband | Muse S | openble-muse | EEG, accelerometer, gyro and battery streams; start-up sequence and presets | Supported |
 | Bond Touch bracelet | V2 | openble-bondtouch | Setup and received touches; plays colours and vibration patterns | Supported |
-| Philips Sonicare toothbrush | HX9393 | openble-sonicare | GATT map and advertisement matching; most byte layouts still open | Planned |
+| Philips Sonicare toothbrush | HX999X | openble-sonicare | GATT map, identity, battery, and live handle notifications; most byte layouts still open | Supported |
 
-The model column lists the devices we have tested. Other devices that speak the same protocol will likely work too: other Lifesense A2/A3 scales, other Lovense toys, the Muse 2016, Muse 2 and Muse S Athena, and the other Bond Touch generations (V1, V3, V4, Mini). If you try one, please report how it went in an issue. **Supported** means the library has been checked against a live device of that model. The Lovense, Muse and Bond Touch libraries are not part of a hub yet, so use them directly from your own code. **Planned** means work has started but the device cannot be used yet.
+The model column lists the devices we have tested. Other devices that speak the same protocol will likely work too: other Lifesense A2/A3 scales, other Lovense toys, the Muse 2016, Muse 2 and Muse S Athena, the other Bond Touch generations (V1, V3, V4, Mini), and other Sonicare handles that advertise `477ea600-…0001`. If you try one, please report how it went in an issue. **Supported** means the library has been checked against a live device of that model. The Lovense, Muse, Bond Touch and Sonicare libraries are not part of a hub yet, so use them directly from your own code. The Sonicare check was `ble_probe brush` on macOS against a handle that reports model HX999X and firmware 1.13.4. **Planned** means work has started but the device cannot be used yet.
 
 **We welcome support for more devices**: see [Adding a device](#adding-a-device).
 
