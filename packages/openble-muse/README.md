@@ -79,10 +79,10 @@ async def stream(address: str, seconds: float = 10) -> None:
 
 ## Protocol notes
 
-[docs/muse-ble-protocol.md](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-muse/docs/muse-ble-protocol.md): models, discovery, the GATT layout, the command channel, the connection lifecycle, the three data layouts and the open questions.
+[docs/muse-ble-protocol.md](https://github.com/kadima-tech/openble/blob/main/packages/openble-muse/docs/muse-ble-protocol.md): models, discovery, the GATT layout, the command channel, the connection lifecycle, the three data layouts and the open questions.
 
 Not affiliated with Interaxon. The name identifies the devices this interoperates with. Not a medical device.
 
 ## License
 
-[MIT License](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-muse/LICENSE), copyright 2026 Kadima Tech.
+[MIT License](https://github.com/kadima-tech/openble/blob/main/packages/openble-muse/LICENSE), copyright 2026 Kadima Tech.

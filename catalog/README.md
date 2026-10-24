@@ -47,7 +47,7 @@ The **Publish protocol catalog** workflow validates pull requests. On changes to
 main, releases, its six-hour schedule, or a manual dispatch it publishes `catalog.json`
 and `schema.json` as assets on the stable `catalog-v1` GitHub release:
 
-    https://github.com/kadima-tech/open-ble-hub/releases/download/catalog-v1/catalog.json
+    https://github.com/kadima-tech/openble/releases/download/catalog-v1/catalog.json
 
 Issue events do not trigger workflows; issue edits and label changes appear on
 the next scheduled or manual publication. Publishing always checks out main on

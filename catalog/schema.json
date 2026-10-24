@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/kadima-tech/open-ble-hub/releases/download/catalog-v1/schema.json",
+  "$id": "https://github.com/kadima-tech/openble/releases/download/catalog-v1/schema.json",
   "title": "OpenBLE protocol catalog v1",
   "type": "object",
   "additionalProperties": false,
@@ -9,7 +9,7 @@
       "const": 1
     },
     "repository": {
-      "const": "https://github.com/kadima-tech/open-ble-hub"
+      "const": "https://github.com/kadima-tech/openble"
     },
     "revision": {
       "type": "string",
@@ -521,7 +521,7 @@
               },
               "url": {
                 "type": "string",
-                "pattern": "^https://github\\.com/kadima-tech/open-ble-hub/issues/[1-9][0-9]*$"
+                "pattern": "^https://github\\.com/kadima-tech/openble/issues/[1-9][0-9]*$"
               },
               "deviceIds": {
                 "type": "array",

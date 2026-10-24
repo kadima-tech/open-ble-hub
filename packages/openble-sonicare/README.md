@@ -24,10 +24,10 @@ CBT_CHARS[cbt_suffix(cbt("4050"))]
 
 ## Protocol notes
 
-[docs/sonicare-toothbrush-protocol.md](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-sonicare/docs/sonicare-toothbrush-protocol.md): discovery, connect, bonding and the GATT catalog.
+[docs/sonicare-toothbrush-protocol.md](https://github.com/kadima-tech/openble/blob/main/packages/openble-sonicare/docs/sonicare-toothbrush-protocol.md): discovery, connect, bonding and the GATT catalog.
 
 Not affiliated with Philips. The names identify the devices this interoperates with.
 
 ## License
 
-[MIT License](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-sonicare/LICENSE), copyright 2026 Kadima Tech.
+[MIT License](https://github.com/kadima-tech/openble/blob/main/packages/openble-sonicare/LICENSE), copyright 2026 Kadima Tech.

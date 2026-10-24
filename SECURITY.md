@@ -4,7 +4,7 @@
 
 Report security issues privately. Do not open a public GitHub issue, and do not put exploit details in a pull request.
 
-- [GitHub private vulnerability reporting](https://github.com/kadima-tech/open-ble-hub/security/advisories/new)
+- [GitHub private vulnerability reporting](https://github.com/kadima-tech/openble/security/advisories/new)
 - Email: [jacobus@kadima-tech.com](mailto:jacobus@kadima-tech.com)
 
 Either channel is enough. Include what you found, how to reproduce it, and the commit or the date you pulled `main`.

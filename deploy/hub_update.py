@@ -48,7 +48,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-DEFAULT_REPO = "https://github.com/kadima-tech/open-ble-hub.git"
+DEFAULT_REPO = "https://github.com/kadima-tech/openble.git"
 # Paths of the repository every release needs, besides apps/<app>.
 SOURCE_PATHS = ("packages", "deploy")
 COPY_IGNORE = shutil.ignore_patterns(

@@ -72,10 +72,10 @@ A toy whose owner set a PIN needs ordinary OS-level bonding first; let the opera
 
 ## Protocol notes
 
-[docs/lovense-ble-protocol.md](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-lovense/docs/lovense-ble-protocol.md): discovery, the GATT layout, the connection lifecycle, both wire formats, the command reference and the open questions.
+[docs/lovense-ble-protocol.md](https://github.com/kadima-tech/openble/blob/main/packages/openble-lovense/docs/lovense-ble-protocol.md): discovery, the GATT layout, the connection lifecycle, both wire formats, the command reference and the open questions.
 
 Not affiliated with Lovense. The name identifies the devices this interoperates with.
 
 ## License
 
-[MIT License](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-lovense/LICENSE), copyright 2026 Kadima Tech.
+[MIT License](https://github.com/kadima-tech/openble/blob/main/packages/openble-lovense/LICENSE), copyright 2026 Kadima Tech.

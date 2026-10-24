@@ -1,8 +1,10 @@
 # Publish one library to PyPI. Tag it as <distribution>-v<version>, for example
 #   git tag openble-lifesense-v0.1.0 && git push origin openble-lifesense-v0.1.0
 # The version in the tag has to match packages/<distribution>/pyproject.toml.
-# PyPI trusted publishing: each project needs a publisher for this repository,
-# workflow publish.yml and environment pypi.
+# PyPI trusted publishing: each project needs a pending publisher for this
+# repository, workflow publish.yml, and environment pypi-<distribution>
+# (for example pypi-openble-lifesense). Pending publishers are unique on
+# owner, repository, workflow, and environment.
 name: Publish
 
 on:
@@ -56,7 +58,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment:
-      name: pypi
+      name: pypi-${{ needs.build.outputs.dist }}
       url: https://pypi.org/project/${{ needs.build.outputs.dist }}/
     permissions:
       id-token: write

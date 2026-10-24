@@ -64,8 +64,8 @@ Runs on **macOS** and **Linux**, including a Raspberry Pi 3 with DietPi or Raspb
 ## Quick start (Mac or Linux)
 
 ```
-git clone https://github.com/kadima-tech/open-ble-hub.git
-cd open-ble-hub
+git clone https://github.com/kadima-tech/openble.git
+cd openble
 make run
 ```
 
@@ -100,7 +100,7 @@ git tag openble-lifesense-v0.1.0
 git push origin openble-lifesense-v0.1.0
 ```
 
-[`.github/workflows/publish.yml`](.github/workflows/publish.yml) checks the version, tests the wheel on Python 3.11 and 3.14, and publishes it with PyPI trusted publishing. Each PyPI project needs a trusted publisher for this repository, workflow `publish.yml` and environment `pypi`.
+[`.github/workflows/publish.yml`](.github/workflows/publish.yml) checks the version, tests the wheel on Python 3.11 and 3.14, and publishes it with PyPI trusted publishing. Each PyPI project needs its own pending publisher for this repository, workflow `publish.yml`, and environment `pypi-<distribution>` (for example `pypi-openble-lifesense`). A pending publisher is unique on that combination, so the same environment cannot be reused for a second project.
 
 ## Releasing a hub app
 
