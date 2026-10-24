@@ -7,8 +7,8 @@ Open BLE Hub welcomes fixes and support for more devices. Contributions are lice
 Python 3.11 or newer, on macOS or Linux (including Raspberry Pi). Windows is not supported. A Bluetooth LE adapter is required only when you talk to a real device.
 
 ```bash
-git clone https://github.com/kadima-tech/open-ble-hub.git
-cd open-ble-hub
+git clone https://github.com/kadima-tech/openble.git
+cd openble
 make venv
 ```
 

@@ -73,15 +73,15 @@ async def weigh(address: str) -> None:
         )
 ```
 
-`apps/ble-probe` and `apps/bathroom-hub` in the [repository](https://github.com/kadima-tech/open-ble-hub) are complete clients built this way.
+`apps/ble-probe` and `apps/bathroom-hub` in the [repository](https://github.com/kadima-tech/openble) are complete clients built this way.
 
 ## Protocol notes
 
-- [docs/lifesense-scale-protocol.md](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-lifesense/docs/lifesense-scale-protocol.md): the static manual, read from the Philips Health app's bytecode.
-- [docs/dl8780-connection-handoff.md](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-lifesense/docs/dl8780-connection-handoff.md): what worked against a live DL8780, including the HCI capture the sync sequence follows.
+- [docs/lifesense-scale-protocol.md](https://github.com/kadima-tech/openble/blob/main/packages/openble-lifesense/docs/lifesense-scale-protocol.md): the static manual, read from the Philips Health app's bytecode.
+- [docs/dl8780-connection-handoff.md](https://github.com/kadima-tech/openble/blob/main/packages/openble-lifesense/docs/dl8780-connection-handoff.md): what worked against a live DL8780, including the HCI capture the sync sequence follows.
 
 Not affiliated with Philips or Lifesense. The names identify the devices this interoperates with.
 
 ## License
 
-[MIT License](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-lifesense/LICENSE), copyright 2026 Kadima Tech.
+[MIT License](https://github.com/kadima-tech/openble/blob/main/packages/openble-lifesense/LICENSE), copyright 2026 Kadima Tech.

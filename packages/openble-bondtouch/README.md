@@ -84,10 +84,10 @@ Where the app's code did not settle a detail, this library picks one and says so
 
 ## Protocol notes
 
-[docs/bond-touch-ble-protocol.md](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-bondtouch/docs/bond-touch-ble-protocol.md): discovery, the GATT layout, the connection lifecycle, each generation's state, events and commands, firmware updates and the open questions.
+[docs/bond-touch-ble-protocol.md](https://github.com/kadima-tech/openble/blob/main/packages/openble-bondtouch/docs/bond-touch-ble-protocol.md): discovery, the GATT layout, the connection lifecycle, each generation's state, events and commands, firmware updates and the open questions.
 
 Not affiliated with Impossible Labs. The name identifies the devices this interoperates with.
 
 ## License
 
-[MIT License](https://github.com/kadima-tech/open-ble-hub/blob/main/packages/openble-bondtouch/LICENSE), copyright 2026 Kadima Tech.
+[MIT License](https://github.com/kadima-tech/openble/blob/main/packages/openble-bondtouch/LICENSE), copyright 2026 Kadima Tech.

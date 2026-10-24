@@ -24,8 +24,8 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Source = "https://github.com/kadima-tech/open-ble-hub/tree/main/packages/openble-lifesense"
-Issues = "https://github.com/kadima-tech/open-ble-hub/issues"
+Source = "https://github.com/kadima-tech/openble/tree/main/packages/openble-lifesense"
+Issues = "https://github.com/kadima-tech/openble/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/openble"]

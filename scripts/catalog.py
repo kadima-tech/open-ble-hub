@@ -13,7 +13,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY = "https://github.com/kadima-tech/open-ble-hub"
+REPOSITORY = "https://github.com/kadima-tech/openble"
 STATUSES = {"verified", "reported", "documented", "planned", "unsupported"}
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
@@ -198,7 +198,7 @@ def fetch_issues():
         if os.environ.get("GH_TOKEN"):
             headers["Authorization"] = "Bearer " + os.environ["GH_TOKEN"]
         request = Request(
-            "https://api.github.com/repos/kadima-tech/open-ble-hub/issues?" + query,
+            "https://api.github.com/repos/kadima-tech/openble/issues?" + query,
             headers=headers,
         )
         with urlopen(request, timeout=30) as response:
