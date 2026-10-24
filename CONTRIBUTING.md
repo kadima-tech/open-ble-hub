@@ -100,3 +100,11 @@ Do not commit databases, tokens, client secrets, pairing files, or `readings.jso
 This project is under the MIT License, copyright 2026 Kadima Tech. See [LICENSE](LICENSE); each library and app carries the same file. Sending a contribution means you license it under those terms.
 
 The Instrument Sans files in `apps/bathroom-hub/src/bathroom_hub/static/fonts/` stay under the SIL Open Font License (`OFL.txt` beside them). That license is separate from MIT.
+
+## Protocol and device catalog
+
+Update `catalog/protocols/<protocol>.json` with each exact model, firmware if known,
+verification status, notes and tracked evidence. Follow [catalog/README.md](catalog/README.md);
+run `python3 scripts/catalog.py` and `python3 -m unittest discover -s scripts`.
+Label related issues `protocol:<id>` and `device:<id>`. The catalog workflow
+publishes the feed consumed by the website. Adding a model needs no website edit.

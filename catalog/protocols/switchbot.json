@@ -1,0 +1,108 @@
+{
+  "id": "switchbot",
+  "name": "SwitchBot",
+  "type": "Home devices",
+  "summary": "Protocol documentation",
+  "package": null,
+  "description": "Protocol notes for SwitchBot devices, including Bot, Curtain, meters, sensors, plugs, and locks. A reference for future OpenBLE work.",
+  "capabilities": [
+    [
+      "Protocol manual",
+      "Available",
+      "Read the repository’s SwitchBot protocol notes."
+    ],
+    [
+      "Python library",
+      "Not available",
+      "There is no OpenBLE SwitchBot package yet."
+    ],
+    [
+      "Live-device support",
+      "Not claimed",
+      "This entry is documentation, not a tested OpenBLE integration."
+    ]
+  ],
+  "tested": "No live-device support is claimed by this documentation-only entry.",
+  "limits": "The presence of a manual does not imply an OpenBLE library, a working hub integration, or support for every model.",
+  "manual": "docs/switchbot-ble-protocol.md",
+  "code": null,
+  "next": "Start with the protocol notes, or contribute a device-specific library.",
+  "issueLabels": [
+    "protocol:switchbot"
+  ],
+  "integrations": [],
+  "devices": [
+    {
+      "id": "switchbot-bot",
+      "brand": "SwitchBot",
+      "model": "Bot",
+      "status": "documented",
+      "notes": "Protocol notes only. No OpenBLE library or live-device support is claimed.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "docs/switchbot-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:switchbot-bot"
+      ]
+    },
+    {
+      "id": "switchbot-curtain",
+      "brand": "SwitchBot",
+      "model": "Curtain",
+      "status": "documented",
+      "notes": "Protocol notes only. No OpenBLE library or live-device support is claimed.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "docs/switchbot-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:switchbot-curtain"
+      ]
+    },
+    {
+      "id": "switchbot-meter",
+      "brand": "SwitchBot",
+      "model": "Meter",
+      "status": "documented",
+      "notes": "Protocol notes only. No OpenBLE library or live-device support is claimed.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "docs/switchbot-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:switchbot-meter"
+      ]
+    },
+    {
+      "id": "switchbot-lock",
+      "brand": "SwitchBot",
+      "model": "Lock",
+      "status": "documented",
+      "notes": "Protocol notes only. No OpenBLE library or live-device support is claimed.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "docs/switchbot-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:switchbot-lock"
+      ]
+    }
+  ]
+}

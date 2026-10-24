@@ -15,7 +15,7 @@ STAMP     := $(VENV)/.installed
 PROJECTS  := $(wildcard packages/* apps/*)
 # tests/ holds the Bluetooth suite that drives both apps against bleak;
 # deploy/tests the updater that installs the hubs on a Pi.
-TEST_DIRS := $(wildcard $(addsuffix /tests,$(PROJECTS))) tests deploy/tests
+TEST_DIRS := $(wildcard $(addsuffix /tests,$(PROJECTS))) tests deploy/tests scripts
 
 .DEFAULT_GOAL := help
 .PHONY: help venv run ui test lint build scan scale watch clean
@@ -60,3 +60,7 @@ watch: $(STAMP) ## Keep listening for the scale (ble_probe watch)
 
 clean: ## Remove .venv and dist/ (keeps DATA_DIR)
 	rm -rf $(VENV) dist
+
+.PHONY: catalog
+catalog: ## Validate and export the public protocol catalog
+	python3 scripts/catalog.py

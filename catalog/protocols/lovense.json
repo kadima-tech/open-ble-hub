@@ -1,0 +1,59 @@
+{
+  "id": "lovense",
+  "name": "Lovense",
+  "type": "Connected toy",
+  "summary": "Device information & vibration control",
+  "package": "openble-lovense",
+  "description": "A reusable library for Lovense discovery, command construction, replies, and paced communication.",
+  "capabilities": [
+    [
+      "Device information",
+      "Read",
+      "Device type, firmware, battery, and capabilities."
+    ],
+    [
+      "Vibration",
+      "Control",
+      "Vibrate and LVS commands on the tested Max."
+    ],
+    [
+      "Channel selection",
+      "Available",
+      "Choose the device’s TX and RX characteristics."
+    ],
+    [
+      "Other commands",
+      "Varies",
+      "Documented commands are not all supported by every model."
+    ]
+  ],
+  "tested": "Checked against a live Lovense Max on firmware 223, using bleak on macOS.",
+  "limits": "The tested Max returns an unknown-command reply for Mply and binary 0xAA frames. The library is not integrated into a hub.",
+  "manual": "packages/openble-lovense/docs/lovense-ble-protocol.md",
+  "code": "from openble.lovense import commands\n\ncommand = commands.vibrate(10)\nprint(command)  # b'Vibrate:10;'",
+  "next": "Use ToyLink with your own transport. Stop any active output before disconnecting.",
+  "issueLabels": [
+    "protocol:lovense"
+  ],
+  "integrations": [],
+  "devices": [
+    {
+      "id": "lovense-max",
+      "brand": "Lovense",
+      "model": "Max",
+      "status": "verified",
+      "notes": "Checked against a live Lovense Max on firmware 223, using bleak on macOS.",
+      "firmware": "223",
+      "platform": "macOS",
+      "evidence": [
+        {
+          "path": "packages/openble-lovense/docs/lovense-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:lovense-max"
+      ]
+    }
+  ]
+}

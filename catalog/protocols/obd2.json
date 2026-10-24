@@ -1,0 +1,54 @@
+{
+  "id": "obd2",
+  "name": "OBD-II",
+  "type": "Vehicle adapter",
+  "summary": "Adapter protocol documentation",
+  "package": null,
+  "description": "Protocol notes for ELM327-style OBD-II adapters over Bluetooth Classic, BLE, and WiFi.",
+  "capabilities": [
+    [
+      "Protocol manual",
+      "Available",
+      "Read the adapter protocol and transport notes."
+    ],
+    [
+      "Python library",
+      "Not available",
+      "There is no OpenBLE OBD-II package yet."
+    ],
+    [
+      "Live-device support",
+      "Not claimed",
+      "This entry documents the protocol; it is not a tested integration."
+    ]
+  ],
+  "tested": "No live-device support is claimed by this documentation-only entry.",
+  "limits": "Adapter behavior varies. This manual-only entry is not a claim of compatibility with a particular vehicle or adapter.",
+  "manual": "docs/obd2-adapter-protocol.md",
+  "code": null,
+  "next": "Read the protocol notes and help document a specific adapter.",
+  "issueLabels": [
+    "protocol:obd2"
+  ],
+  "integrations": [],
+  "devices": [
+    {
+      "id": "elm327-adapters",
+      "brand": "ELM327 compatible",
+      "model": "OBD-II adapters",
+      "status": "documented",
+      "notes": "Adapter family documentation; no individual adapter or vehicle has been verified.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "docs/obd2-adapter-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:elm327-adapters"
+      ]
+    }
+  ]
+}
