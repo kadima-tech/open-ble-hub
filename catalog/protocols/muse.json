@@ -1,0 +1,113 @@
+{
+  "id": "muse",
+  "name": "Muse",
+  "type": "EEG headband",
+  "summary": "EEG, motion & battery streams",
+  "package": "openble-muse",
+  "description": "Commands, startup sequencing, and stream decoders for Muse headbands. The protocol manual connects the wire formats to reusable Python data structures.",
+  "capabilities": [
+    [
+      "EEG",
+      "Stream",
+      "Read EEG data using the layout reported by the headband."
+    ],
+    [
+      "Motion",
+      "Stream",
+      "Decode accelerometer and gyroscope packets."
+    ],
+    [
+      "Battery",
+      "Read",
+      "Decode battery packets."
+    ],
+    [
+      "Startup and presets",
+      "Available",
+      "Prepare a session, start streaming, and halt it cleanly."
+    ]
+  ],
+  "tested": "Checked against a live Muse S on firmware 1.0.1, protocol version 1, using bleak on macOS.",
+  "limits": "Athena BLE4 and universal v3 decoders are checked against constructed bytes only. The library is not integrated into a hub and is not a medical device.",
+  "manual": "packages/openble-muse/docs/muse-ble-protocol.md",
+  "code": "from openble.muse import commands\n\nstart = commands.encode(\"s\")\nprint(start.hex(\" \"))  # 02 73 0a",
+  "next": "Use MuseLink with a Bluetooth transport. Check the manual for your headband’s protocol version.",
+  "issueLabels": [
+    "protocol:muse"
+  ],
+  "integrations": [],
+  "devices": [
+    {
+      "id": "muse-muse-s",
+      "brand": "Interaxon",
+      "model": "Muse S",
+      "status": "verified",
+      "notes": "Checked against a live Muse S on firmware 1.0.1, protocol version 1, using bleak on macOS.",
+      "firmware": "1.0.1",
+      "platform": "macOS",
+      "evidence": [
+        {
+          "path": "packages/openble-muse/docs/muse-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:muse-muse-s"
+      ]
+    },
+    {
+      "id": "muse-2016",
+      "brand": "Interaxon",
+      "model": "Muse 2016",
+      "status": "documented",
+      "notes": "Related protocol family documented; no live-device verification for this model.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "packages/openble-muse/docs/muse-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:muse-2016"
+      ]
+    },
+    {
+      "id": "muse-2",
+      "brand": "Interaxon",
+      "model": "Muse 2",
+      "status": "documented",
+      "notes": "Related protocol family documented; no live-device verification for this model.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "packages/openble-muse/docs/muse-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:muse-2"
+      ]
+    },
+    {
+      "id": "muse-s-athena",
+      "brand": "Interaxon",
+      "model": "Muse S Athena",
+      "status": "documented",
+      "notes": "Related protocol family documented; no live-device verification for this model.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "packages/openble-muse/docs/muse-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:muse-s-athena"
+      ]
+    }
+  ]
+}

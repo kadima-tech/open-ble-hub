@@ -1,0 +1,61 @@
+{
+  "id": "sonicare",
+  "name": "Sonicare",
+  "type": "Toothbrush",
+  "summary": "Identity, battery & handle notifications",
+  "package": "openble-sonicare",
+  "description": "A documented GATT map and discovery helpers for Philips Sonicare handles. Explore the characteristics and notifications without depending on the manufacturer’s app.",
+  "capabilities": [
+    [
+      "Discovery",
+      "Available",
+      "Classify advertised Sonicare service and handle families."
+    ],
+    [
+      "Identity and battery",
+      "Read",
+      "Inspect the live handle’s exposed characteristics."
+    ],
+    [
+      "Handle notifications",
+      "Receive",
+      "Subscribe to notifications from a tested handle."
+    ],
+    [
+      "Byte layouts",
+      "Partial",
+      "Most notification layouts and SACP writes remain open."
+    ]
+  ],
+  "tested": "Checked with BLE probe on macOS against a handle reporting HX999X and firmware 1.13.4.",
+  "limits": "The library is not integrated into a hub. Receiving a notification does not mean every field in it has been decoded.",
+  "manual": "packages/openble-sonicare/docs/sonicare-toothbrush-protocol.md",
+  "code": "from openble.sonicare.identify import classify\nfrom openble.sonicare.uuids import cbt\n\nfamilies, evidence = classify(\"Philips Sonicare\", [cbt(\"0001\")])\nprint(families)  # ['toothbrush']",
+  "next": "Use the discovery helpers and protocol manual in your own client.",
+  "issueLabels": [
+    "protocol:sonicare"
+  ],
+  "integrations": [
+    "BLE probe"
+  ],
+  "devices": [
+    {
+      "id": "sonicare-hx999x",
+      "brand": "Philips",
+      "model": "HX999X",
+      "status": "verified",
+      "notes": "Checked with BLE probe on macOS against a handle reporting HX999X and firmware 1.13.4.",
+      "firmware": "1.13.4",
+      "platform": "macOS",
+      "evidence": [
+        {
+          "path": "packages/openble-sonicare/docs/sonicare-toothbrush-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:sonicare-hx999x"
+      ]
+    }
+  ]
+}

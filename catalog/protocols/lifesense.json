@@ -1,0 +1,120 @@
+{
+  "id": "lifesense",
+  "name": "Lifesense",
+  "type": "Scale",
+  "summary": "Weight & impedance",
+  "package": "openble-lifesense",
+  "description": "An open connection to Lifesense A2/A3 scales, including the Philips DL8780. Read measurements, understand the handshake, and use the library in your own application.",
+  "capabilities": [
+    [
+      "Weight",
+      "Read",
+      "Parsers for A2 and A3 weight notifications."
+    ],
+    [
+      "Impedance",
+      "Read",
+      "Decode the scale\u2019s measurement and append packets."
+    ],
+    [
+      "Pairing and sync",
+      "Available",
+      "A reusable handshake with persistent pairing state."
+    ],
+    [
+      "Bathroom Hub",
+      "Integrated",
+      "Assign readings to people and keep them on your own hardware."
+    ]
+  ],
+  "tested": "Checked against a live Philips DL8780. Other scales that speak the same Lifesense A2/A3 protocol may work, but are not all tested.",
+  "limits": "Body composition values in the Bathroom Hub are calculated per person. They are estimates, not medical measurements.",
+  "manual": "packages/openble-lifesense/docs/lifesense-scale-protocol.md",
+  "extraManual": [
+    "DL8780 live connection notes",
+    "packages/openble-lifesense/docs/dl8780-connection-handoff.md"
+  ],
+  "code": "from openble.lifesense.packets import parse_a3_weight\n\nreading = parse_a3_weight(bytes.fromhex(\n    \"1f 16 26 00 fe 89 50 91 1f 00 00 00 00 17 13 00 ff 01 19 00\"\n))\nprint(reading[\"weight_kg\"])  # 97.5",
+  "next": "Run the Bathroom Hub, or use the library with your own Bluetooth transport.",
+  "issueLabels": [
+    "protocol:lifesense"
+  ],
+  "integrations": [
+    "Bathroom Hub",
+    "BLE probe"
+  ],
+  "devices": [
+    {
+      "id": "lifesense-dl8780",
+      "brand": "Philips",
+      "model": "DL8780",
+      "status": "verified",
+      "notes": "Checked against a live Philips DL8780. Other scales that speak the same Lifesense A2/A3 protocol may work, but are not all tested.",
+      "firmware": null,
+      "platform": "macOS",
+      "evidence": [
+        {
+          "path": "packages/openble-lifesense/docs/dl8780-connection-handoff.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:lifesense-dl8780"
+      ]
+    },
+    {
+      "id": "a2",
+      "brand": "Lifesense",
+      "model": "A2",
+      "status": "documented",
+      "notes": "Listed in the app\u2019s scale model map. Live compatibility with this library has not been verified.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "packages/openble-lifesense/docs/lifesense-scale-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:a2"
+      ]
+    },
+    {
+      "id": "bs-440-connect",
+      "brand": "Not recorded",
+      "model": "BS 440 connect",
+      "status": "documented",
+      "notes": "Listed in the app\u2019s scale model map. Live compatibility with this library has not been verified.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "packages/openble-lifesense/docs/lifesense-scale-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:bs-440-connect"
+      ]
+    },
+    {
+      "id": "gbf-1251-b",
+      "brand": "Not recorded",
+      "model": "GBF-1251-B",
+      "status": "documented",
+      "notes": "Listed in the app\u2019s scale model map. Live compatibility with this library has not been verified.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "packages/openble-lifesense/docs/lifesense-scale-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:gbf-1251-b"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "id": "bondtouch",
+  "name": "Bond Touch",
+  "type": "Touch bracelet",
+  "summary": "Received touches, colour & vibration",
+  "package": "openble-bondtouch",
+  "description": "An open protocol library for Bond Touch bracelets, with setup, touch recording, colours, and vibration patterns.",
+  "capabilities": [
+    [
+      "Setup",
+      "Available",
+      "Answer the bracelet’s setup and connection requests."
+    ],
+    [
+      "Touches",
+      "Receive",
+      "Collect the wearer’s recorded touch pattern."
+    ],
+    [
+      "Colours",
+      "Control",
+      "Build LED colour commands."
+    ],
+    [
+      "Patterns",
+      "Play",
+      "Send touch and vibration patterns to the bracelet."
+    ]
+  ],
+  "tested": "Checked against one live V2 bracelet, Bond002, firmware 2.6.4, using bleak on macOS.",
+  "limits": "V1, V3, V4, and Mini are documented but have not been run against live devices. The library is not integrated into a hub.",
+  "manual": "packages/openble-bondtouch/docs/bond-touch-ble-protocol.md",
+  "code": "from openble.bondtouch import v2\n\ncolour = v2.show_colour((0x23, 0xE0, 0xE8))\nprint(colour.hex(\" \"))",
+  "next": "Keep your chosen AUID consistent and follow the documented setup and bonding sequence.",
+  "issueLabels": [
+    "protocol:bondtouch"
+  ],
+  "integrations": [],
+  "devices": [
+    {
+      "id": "bondtouch-v2",
+      "brand": "Bond Touch",
+      "model": "V2",
+      "status": "verified",
+      "notes": "Checked against one live V2 bracelet, Bond002, firmware 2.6.4, using bleak on macOS.",
+      "firmware": "2.6.4",
+      "platform": "macOS",
+      "evidence": [
+        {
+          "path": "packages/openble-bondtouch/docs/bond-touch-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:bondtouch-v2"
+      ]
+    },
+    {
+      "id": "bondtouch-v1",
+      "brand": "Bond Touch",
+      "model": "V1",
+      "status": "documented",
+      "notes": "Documented generation; not checked against a live device.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "packages/openble-bondtouch/docs/bond-touch-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:bondtouch-v1"
+      ]
+    },
+    {
+      "id": "bondtouch-v3",
+      "brand": "Bond Touch",
+      "model": "V3",
+      "status": "documented",
+      "notes": "Documented generation; not checked against a live device.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "packages/openble-bondtouch/docs/bond-touch-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:bondtouch-v3"
+      ]
+    },
+    {
+      "id": "bondtouch-v4",
+      "brand": "Bond Touch",
+      "model": "V4",
+      "status": "documented",
+      "notes": "Documented generation; not checked against a live device.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "packages/openble-bondtouch/docs/bond-touch-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:bondtouch-v4"
+      ]
+    },
+    {
+      "id": "bondtouch-mini",
+      "brand": "Bond Touch",
+      "model": "Mini",
+      "status": "documented",
+      "notes": "Documented generation; not checked against a live device.",
+      "firmware": null,
+      "platform": null,
+      "evidence": [
+        {
+          "path": "packages/openble-bondtouch/docs/bond-touch-ble-protocol.md",
+          "title": "Protocol manual"
+        }
+      ],
+      "issueLabels": [
+        "device:bondtouch-mini"
+      ]
+    }
+  ]
+}
