@@ -46,4 +46,4 @@ and `schema.json` as assets on the stable `catalog-v1` GitHub release:
 This uses the repository's own GitHub token; no cross-repository secret or
 external database is required. Every payload includes the source commit and
 generation timestamp. Version 1 remains compatible; breaking changes use a new
-schema version and release tag. Schema and validation tests run before publication.
+schema version and release tag. Manifest validation and publisher tests run before publication.

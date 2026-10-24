@@ -114,6 +114,8 @@ Bump `version` in the app's `pyproject.toml`, merge, then push a tag `<app>-v<ve
 | `apps/bathroom-hub/` | The Bathroom Hub: listener, assignment, body composition, Google Health client, SQLite storage, web app, and the Raspberry Pi installer in `deploy/` |
 | `apps/ble-probe/` | The diagnostic CLI |
 | `tests/` | Bluetooth tests that drive both apps against bleak's real API, with no radio |
+| `catalog/` | Versioned protocol and device manifests, verification evidence and the public feed schema |
+| `scripts/catalog.py` | Catalog validation, package metadata and issue export; run with `make catalog` |
 | `deploy/` | `hub-update`, which installs, updates and rolls back the hubs on a Pi |
 | `DESIGN.md` | The web app's design language |
 | `CONTRIBUTING.md` | Development setup, tests and pull requests |

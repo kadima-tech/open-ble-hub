@@ -18,8 +18,9 @@ make venv
 | --- | --- |
 | `make run` | Bathroom Hub with Bluetooth. UI at <http://localhost:8080>, data in `./data`. |
 | `make ui` | Same UI with `--no-bluetooth`. |
-| `make test` | Unit tests of every library and app, `tests/` and `deploy/tests`. No device and no network. |
+| `make test` | Unit tests of every library and app, `tests/`, `deploy/tests` and the catalog publisher in `scripts/`. No device and no network. |
 | `make build` | Sdists and wheels of the libraries in `dist/`. |
+| `make catalog` | Validate protocol manifests and export `dist/catalog/v1/catalog.json`. |
 | `make scan`, `make scale`, `make watch` | `python -m ble_probe` against a live device. Pass extra flags with `ARGS`. |
 | `make help` | Every target. |
 
@@ -35,7 +36,7 @@ make venv
 .venv/bin/python -m unittest discover -s packages/openble-lifesense/tests
 ```
 
-Each library and app keeps its tests in its own `tests/test_*.py`. The root `tests/` holds the Bluetooth suite that drives both apps. `deploy/tests` drives hub-update with real git and a fake systemd and pip. Tests are built from captured packets and fakes (`unittest.mock`, `aiohttp.test_utils`). They do not need a scale, an adapter, or Google credentials.
+Each library and app keeps its tests in its own `tests/test_*.py`. The root `tests/` holds the Bluetooth suite that drives both apps. `deploy/tests` drives hub-update with real git and a fake systemd and pip. `scripts/test_catalog.py` checks catalog validation, issue relationships and publication failures. Tests are built from captured packets and fakes (`unittest.mock`, `aiohttp.test_utils`). They do not need a scale, an adapter, or Google credentials.
 
 New behaviour needs tests in that style. A protocol change should carry the bytes it was checked against, the way `packages/openble-lifesense/tests/test_packets.py` and `test_link.py` do.
 
