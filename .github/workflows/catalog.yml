@@ -6,8 +6,6 @@ on:
   push:
     branches: [main]
     paths: ['catalog/**', 'scripts/catalog.py', 'scripts/test_catalog.py', 'packages/**', 'docs/**', '.github/workflows/catalog.yml']
-  issues:
-    types: [opened, edited, closed, reopened, labeled, unlabeled, deleted, transferred]
   release:
     types: [published]
   schedule:
@@ -34,7 +32,10 @@ jobs:
       - run: python3 scripts/catalog.py
 
   publish:
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || (github.event_name == 'release' && github.event.release.tag_name != 'catalog-v1'))
+    if: >-
+      (github.ref == 'refs/heads/main' &&
+        (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')) ||
+      (github.event_name == 'release' && github.event.release.tag_name != 'catalog-v1')
     needs: validate
     runs-on: ubuntu-latest
     permissions:
@@ -44,6 +45,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.11'

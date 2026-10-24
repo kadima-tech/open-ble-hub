@@ -37,11 +37,22 @@ open/closed issues with links and affected models. Unlabelled issues are not
 classified automatically. An API failure fails the export; it never reports
 unknown issue status as zero issues.
 
+Issue titles are **untrusted, user-controlled plain text**, even after publication
+in this feed. Consumers must escape them for their output context: use HTML
+escaping or `textContent` in a website, never `innerHTML` or a raw HTML template
+slot. JSON encoding and schema validation do not make a title safe HTML.
+The OpenBLE website escapes titles in both open and closed issue lists.
+
 The **Publish protocol catalog** workflow validates pull requests. On changes to
-main, releases, issue changes, or its six-hour schedule it publishes `catalog.json`
+main, releases, its six-hour schedule, or a manual dispatch it publishes `catalog.json`
 and `schema.json` as assets on the stable `catalog-v1` GitHub release:
 
     https://github.com/kadima-tech/open-ble-hub/releases/download/catalog-v1/catalog.json
+
+Issue events do not trigger workflows; issue edits and label changes appear on
+the next scheduled or manual publication. Publishing always checks out main on
+`ubuntu-latest`, disables persisted Git credentials, and provides the repository
+token only to the export/label and release-upload steps.
 
 This uses the repository's own GitHub token; no cross-repository secret or
 external database is required. Every payload includes the source commit and

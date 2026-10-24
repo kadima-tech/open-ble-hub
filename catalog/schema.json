@@ -510,7 +510,8 @@
               "title": {
                 "type": "string",
                 "minLength": 1,
-                "pattern": "\\S"
+                "pattern": "\\S",
+                "description": "Untrusted, user-controlled issue title. Render as plain text with output-context escaping; never interpret as HTML."
               },
               "state": {
                 "enum": [
