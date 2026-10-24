@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     outputs:
       dist: ${{ steps.resolve.outputs.dist }}
     steps:
