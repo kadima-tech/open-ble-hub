@@ -1,5 +1,5 @@
 # Ruff for Open BLE Hub. Python 3.11 is the documented minimum.
-# Pinned in CI to ruff 0.17.0 so the default rule set stays stable.
+# Pinned in CI to ruff 0.17.1 so the default rule set stays stable.
 target-version = "py311"
 line-length = 88
 
