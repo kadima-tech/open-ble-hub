@@ -9,11 +9,15 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 5
+    # Version updates are batched into a weekly PR. Limit 0 stops Dependabot
+    # from opening version PRs; security alerts still run.
+    open-pull-requests-limit: 0
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 5
+    # Version updates are batched into a weekly PR. Limit 0 stops Dependabot
+    # from opening version PRs; security alerts still run.
+    open-pull-requests-limit: 0

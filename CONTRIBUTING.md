@@ -53,10 +53,10 @@ CI does not replace a hardware smoke test. Before merging a bleak upgrade, pair 
 
 ## Linters and CI
 
-[Ruff](https://docs.astral.sh/ruff/) 0.17.0 lints and formats Python. The config is [ruff.toml](ruff.toml), aimed at Python 3.11. There is no type checker and no pre-commit hook.
+[Ruff](https://docs.astral.sh/ruff/) 0.17.1 lints and formats Python. The config is [ruff.toml](ruff.toml), aimed at Python 3.11. There is no type checker and no pre-commit hook.
 
 ```bash
-python3 -m pip install ruff==0.17.0
+python3 -m pip install ruff==0.17.1
 make lint
 ```
 

@@ -41,7 +41,7 @@ ui: $(STAMP) ## Run Bathroom Hub without Bluetooth, for UI work
 test: $(STAMP) ## Run the unit tests of every package and app
 	@set -e; for dir in $(TEST_DIRS); do echo "== $$dir"; $(PY) -m unittest discover -s $$dir; done
 
-lint: ## Lint and format-check with ruff (python3 -m pip install ruff==0.17.0)
+lint: ## Lint and format-check with ruff (python3 -m pip install ruff==0.17.1)
 	python3 -m ruff check .
 	python3 -m ruff format --check .
 
